@@ -5,10 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="description" content="Shelfwise - Your personal book tracker"/>
 <meta name="theme-color" content="#1a1612"/>
-<title>Shelfwise</title>
+<title>Connie Reads</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<!-- Firebase v10 SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, writeBatch, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCYgcNE4Np86fBKt5GENBenXhyrsSQYVKQ",
+    authDomain: "connie-reads.firebaseapp.com",
+    projectId: "connie-reads",
+    storageBucket: "connie-reads.firebasestorage.app",
+    messagingSenderId: "648707030707",
+    appId: "1:648707030707:web:4902dbe402be5a84933ac6",
+    measurementId: "G-RJM75LPMG1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const googleProvider = new GoogleAuthProvider();
+
+  // Expose to global scope for use in non-module scripts
+  window._fb = { auth, db, googleProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, signOut, onAuthStateChanged, sendPasswordResetEmail, doc, setDoc, getDoc, collection, getDocs, deleteDoc, writeBatch, onSnapshot, serverTimestamp };
+
+  // Auth state listener
+  onAuthStateChanged(auth, user => {
+    window._fbUser = user;
+    if (window._onAuthReady) window._onAuthReady(user);
+  });
+</script>
 
 <style>
 /* ========== CSS VARIABLES ========== */
@@ -1464,9 +1494,281 @@ a { color: inherit; text-decoration: none; }
   .top-bar-title { font-size: 18px; }
   .books-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
 }
+
+/* ========== AUTH SCREEN ========== */
+#auth-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-base);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#auth-screen.hidden { display: none; }
+
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.35s ease;
+}
+.auth-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.auth-logo-icon {
+  width: 56px; height: 56px;
+  background: var(--accent);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(212,136,74,0.4);
+}
+.auth-logo-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+.auth-logo-name span { color: var(--accent); font-style: italic; }
+.auth-logo-sub { font-size: 13px; color: var(--text-muted); }
+
+.auth-tabs {
+  display: flex;
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.auth-tab.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.auth-form { display: none; }
+.auth-form.active { display: block; }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.btn-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 6px;
+}
+.btn-google:hover { border-color: var(--accent); background: var(--accent-soft); }
+.btn-google svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.auth-error {
+  background: var(--red-soft);
+  border: 1px solid var(--red);
+  color: var(--red);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-top: 12px;
+  display: none;
+}
+.auth-error.show { display: block; }
+.auth-loading {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.auth-loading.show { display: flex; }
+.spin {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ========== SYNC INDICATOR ========== */
+.sync-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  margin-left: auto;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+.sync-dot.syncing {
+  background: var(--accent);
+  animation: pulse 1s ease infinite;
+}
+.sync-dot.error { background: var(--red); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ========== USER PROFILE AREA ========== */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 8px 12px 0;
+}
+.user-profile:hover { border-color: var(--accent); }
+.user-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-name { font-size: 13px; font-weight: 500; color: var(--text-primary); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.signout-btn {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 3px 7px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+.signout-btn:hover { color: var(--red); border-color: var(--red); }
 </style>
 </head>
 <body>
+
+<!-- ===== AUTH SCREEN ===== -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="28" height="28">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          <path d="M9 7h7M9 10h5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="auth-logo-name">Shelf<span>wise</span></div>
+      <div class="auth-logo-sub">Your personal reading library</div>
+    </div>
+
+    <div class="auth-loading show" id="auth-loading">
+      <div class="spin"></div> Loading...
+    </div>
+
+    <div id="auth-forms" style="display:none;">
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('signin')">Sign In</div>
+        <div class="auth-tab" onclick="switchAuthTab('signup')">Create Account</div>
+      </div>
+
+      <!-- Sign In -->
+      <div class="auth-form active" id="auth-signin">
+        <button class="btn-google" onclick="authWithGoogle()">
+          <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continue with Google
+        </button>
+        <div class="auth-divider">or sign in with email</div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="signin-email" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="signin-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSignIn()"/>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="authSignIn()">Sign In</button>
+        <div style="text-align:center;margin-top:12px;">
+          <button style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer;text-decoration:underline;" onclick="authForgotPassword()">Forgot password?</button>
+        </div>
+        <div class="auth-error" id="signin-error"></div>
+      </div>
+
+      <!-- Sign Up -->
+      <div class="auth-form" id="auth-signup">
+        <button class="btn-google" onclick="authWithGoogle()">
+          <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Sign up with Google
+        </button>
+        <div class="auth-divider">or create account</div>
+        <div class="form-group">
+          <label class="form-label">Display Name</label>
+          <input type="text" class="form-input" id="signup-name" placeholder="Connie"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="signup-email" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSignUp()"/>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="authSignUp()">Create Account</button>
+        <div class="auth-error" id="signup-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="app">
   <!-- SIDEBAR -->
@@ -1516,7 +1818,16 @@ a { color: inherit; text-decoration: none; }
     </nav>
 
     <div class="sidebar-footer">
-      <button class="theme-toggle" onclick="toggleTheme()">
+      <div id="user-profile-area" class="user-profile" style="margin-bottom:10px;">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-name" id="user-display-name">Loading...</div>
+        <div class="sync-dot" id="sync-dot" title="Synced to cloud"></div>
+      </div>
+      <button class="btn btn-ghost" style="width:100%; justify-content:center; font-size:12px; color:var(--red); padding:7px;" onclick="authSignOut()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+      <button class="theme-toggle" onclick="toggleTheme()" style="margin-top:8px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         Light Mode
         <div class="toggle-switch" id="theme-switch"></div>
@@ -1830,7 +2141,7 @@ a { color: inherit; text-decoration: none; }
               </div>
               <div class="settings-section">
                 <h3>Export Data</h3>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Download a backup of your entire Shelfwise library.</p>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Download a backup of your entire Connie Reads library.</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                   <button class="btn btn-secondary" onclick="exportData('json')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1856,7 +2167,7 @@ a { color: inherit; text-decoration: none; }
                   <div style="width:64px; height:64px; background:var(--accent); border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="32" height="32"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 10h5" stroke-linecap="round"/></svg>
                   </div>
-                  <div style="font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--text-primary);">Shelfwise</div>
+                  <div style="font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--text-primary);">Connie Reads</div>
                   <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Version 1.0.0</div>
                 </div>
                 <p style="font-size:14px; color:var(--text-secondary); max-width:400px; margin:0 auto 20px; line-height:1.6;">Your personal book tracker. Track your reading, discover new books, and organise your library your way.</p>
@@ -2103,7 +2414,7 @@ a { color: inherit; text-decoration: none; }
 
 <script>
 // ===================================================
-//  SHELFWISE - Main Application Logic
+//  SHELFWISE - Firebase-Integrated Application Logic
 // ===================================================
 
 // ---- STATE ----
@@ -2118,26 +2429,256 @@ let selectedEmoji = '📚';
 let editingBookId = null;
 let lastSearchResults = [];
 let coverRefreshAttempts = {};
+let currentUser = null;
+let unsubscribeBooks = null;
+let unsubscribeCollections = null;
+let syncTimeout = null;
 
-// ---- STORAGE ----
-function save() {
-  try {
-    localStorage.setItem('shelfwise_books', JSON.stringify(books));
-    localStorage.setItem('shelfwise_collections', JSON.stringify(collections));
-    localStorage.setItem('shelfwise_settings', JSON.stringify(settings));
-  } catch(e) { console.warn('Storage full'); }
+// ---- FIREBASE HELPERS ----
+function fb() { return window._fb; }
+function uid() { return currentUser?.uid; }
+
+function setSyncStatus(status) {
+  const dot = document.getElementById('sync-dot');
+  if (!dot) return;
+  dot.className = 'sync-dot' + (status === 'syncing' ? ' syncing' : status === 'error' ? ' error' : '');
+  dot.title = status === 'syncing' ? 'Syncing...' : status === 'error' ? 'Sync error' : 'Synced to cloud';
 }
 
-function load() {
+// ---- FIRESTORE PATHS ----
+function booksCol() { return fb().collection(fb().db, 'users', uid(), 'books'); }
+function collectionsCol() { return fb().collection(fb().db, 'users', uid(), 'collections'); }
+function settingsDoc() { return fb().doc(fb().db, 'users', uid(), 'config', 'settings'); }
+
+// ---- SAVE TO FIRESTORE ----
+async function saveBookToFirestore(book) {
+  if (!uid()) return;
+  setSyncStatus('syncing');
   try {
-    const b = localStorage.getItem('shelfwise_books');
-    const c = localStorage.getItem('shelfwise_collections');
-    const s = localStorage.getItem('shelfwise_settings');
+    await fb().setDoc(fb().doc(booksCol(), book.id), { ...book, updatedAt: fb().serverTimestamp() });
+    setSyncStatus('synced');
+  } catch(e) { setSyncStatus('error'); console.error(e); }
+}
+
+async function deleteBookFromFirestore(bookId) {
+  if (!uid()) return;
+  setSyncStatus('syncing');
+  try {
+    await fb().deleteDoc(fb().doc(booksCol(), bookId));
+    setSyncStatus('synced');
+  } catch(e) { setSyncStatus('error'); }
+}
+
+async function saveCollectionToFirestore(col) {
+  if (!uid()) return;
+  try {
+    await fb().setDoc(fb().doc(collectionsCol(), col.id), col);
+  } catch(e) { console.error(e); }
+}
+
+async function saveSettingsToFirestore() {
+  if (!uid()) return;
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+    try {
+      await fb().setDoc(settingsDoc(), settings);
+    } catch(e) { console.error(e); }
+  }, 800);
+}
+
+// ---- SUBSCRIBE TO REALTIME UPDATES ----
+function subscribeToData() {
+  // Unsubscribe existing listeners
+  if (unsubscribeBooks) unsubscribeBooks();
+  if (unsubscribeCollections) unsubscribeCollections();
+
+  // Books realtime
+  unsubscribeBooks = fb().onSnapshot(booksCol(), snap => {
+    books = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+    books.sort((a,b) => (b.dateAdded||0) - (a.dateAdded||0));
+    renderLibrary();
+    refreshDashboard();
+    updateLibCount();
+  }, err => {
+    console.error('Books sync error:', err);
+    setSyncStatus('error');
+  });
+
+  // Collections realtime
+  unsubscribeCollections = fb().onSnapshot(collectionsCol(), snap => {
+    collections = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+    renderCollections();
+    refreshDashboard();
+  });
+}
+
+async function loadSettings() {
+  if (!uid()) return;
+  try {
+    const snap = await fb().getDoc(settingsDoc());
+    if (snap.exists()) {
+      settings = { ...settings, ...snap.data() };
+      applyTheme();
+      const gi = document.getElementById('goal-input');
+      if (gi && settings.goal) gi.value = settings.goal;
+    }
+  } catch(e) { console.error(e); }
+}
+
+// ---- LOCAL STORAGE FALLBACK (offline support) ----
+function saveLocal() {
+  try {
+    localStorage.setItem('sw_books', JSON.stringify(books));
+    localStorage.setItem('sw_collections', JSON.stringify(collections));
+    localStorage.setItem('sw_settings', JSON.stringify(settings));
+  } catch(e) {}
+}
+function loadLocal() {
+  try {
+    const b = localStorage.getItem('sw_books');
+    const c = localStorage.getItem('sw_collections');
+    const s = localStorage.getItem('sw_settings');
     if (b) books = JSON.parse(b);
     if (c) collections = JSON.parse(c);
     if (s) settings = { ...settings, ...JSON.parse(s) };
-  } catch(e) { books = []; collections = []; }
+  } catch(e) {}
 }
+// Keep local as cache
+function save() {
+  saveLocal();
+  saveSettingsToFirestore();
+}
+
+// ---- AUTH FUNCTIONS ----
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0) === (tab==='signin')));
+  document.getElementById('auth-signin').classList.toggle('active', tab === 'signin');
+  document.getElementById('auth-signup').classList.toggle('active', tab === 'signup');
+}
+
+async function authSignIn() {
+  const email = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  const errEl = document.getElementById('signin-error');
+  errEl.classList.remove('show');
+  if (!email || !password) { showAuthError(errEl, 'Please fill in all fields'); return; }
+  try {
+    await fb().signInWithEmailAndPassword(fb().auth, email, password);
+  } catch(e) {
+    showAuthError(errEl, friendlyAuthError(e.code));
+  }
+}
+
+async function authSignUp() {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const errEl = document.getElementById('signup-error');
+  errEl.classList.remove('show');
+  if (!email || !password) { showAuthError(errEl, 'Please fill in all fields'); return; }
+  try {
+    const cred = await fb().createUserWithEmailAndPassword(fb().auth, email, password);
+    // Store display name in settings
+    if (name) {
+      settings.displayName = name;
+      await saveSettingsToFirestore();
+    }
+  } catch(e) {
+    showAuthError(errEl, friendlyAuthError(e.code));
+  }
+}
+
+async function authWithGoogle() {
+  try {
+    await fb().signInWithPopup(fb().auth, fb().googleProvider);
+  } catch(e) {
+    if (e.code !== 'auth/popup-closed-by-user') {
+      showToast('Google sign-in failed: ' + friendlyAuthError(e.code), 'error');
+    }
+  }
+}
+
+async function authForgotPassword() {
+  const email = document.getElementById('signin-email').value.trim();
+  if (!email) { showAuthError(document.getElementById('signin-error'), 'Enter your email address first'); return; }
+  try {
+    await fb().sendPasswordResetEmail(fb().auth, email);
+    showToast('Password reset email sent!', 'success');
+  } catch(e) {
+    showAuthError(document.getElementById('signin-error'), friendlyAuthError(e.code));
+  }
+}
+
+async function authSignOut() {
+  if (!confirm('Sign out of Connie Reads?')) return;
+  if (unsubscribeBooks) unsubscribeBooks();
+  if (unsubscribeCollections) unsubscribeCollections();
+  books = []; collections = [];
+  await fb().signOut(fb().auth);
+}
+
+function showAuthError(el, msg) {
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function friendlyAuthError(code) {
+  const map = {
+    'auth/invalid-email': 'Invalid email address.',
+    'auth/user-not-found': 'No account found with this email.',
+    'auth/wrong-password': 'Incorrect password.',
+    'auth/email-already-in-use': 'An account already exists with this email.',
+    'auth/weak-password': 'Password must be at least 6 characters.',
+    'auth/too-many-requests': 'Too many attempts. Please try again later.',
+    'auth/network-request-failed': 'Network error. Check your connection.',
+    'auth/invalid-credential': 'Invalid email or password.',
+  };
+  return map[code] || 'Something went wrong. Please try again.';
+}
+
+function updateUserUI(user) {
+  const nameEl = document.getElementById('user-display-name');
+  const avatarEl = document.getElementById('user-avatar');
+  if (!user) return;
+  const displayName = user.displayName || settings.displayName || user.email?.split('@')[0] || 'Reader';
+  if (nameEl) nameEl.textContent = displayName;
+  if (avatarEl) {
+    if (user.photoURL) {
+      avatarEl.innerHTML = `<img src="${user.photoURL}" alt=""/>`;
+    } else {
+      avatarEl.textContent = displayName[0].toUpperCase();
+    }
+  }
+  // Update greeting
+  const greetEl = document.querySelector('.greeting h1');
+  if (greetEl) greetEl.innerHTML = `Welcome back, <span>${displayName.split(' ')[0]}</span>`;
+}
+
+// ---- AUTH STATE HANDLER ----
+window._onAuthReady = async (user) => {
+  const authScreen = document.getElementById('auth-screen');
+  const authLoading = document.getElementById('auth-loading');
+  const authForms = document.getElementById('auth-forms');
+
+  if (user) {
+    currentUser = user;
+    authScreen.classList.add('hidden');
+    updateUserUI(user);
+    setSyncStatus('syncing');
+    await loadSettings();
+    subscribeToData();
+    refreshDashboard();
+    setSyncStatus('synced');
+  } else {
+    currentUser = null;
+    books = []; collections = [];
+    authScreen.classList.remove('hidden');
+    authLoading.classList.remove('show');
+    authForms.style.display = 'block';
+    renderLibrary();
+    refreshDashboard();
+  }
+};
 
 // ---- NAVIGATION ----
 const pageTitles = { dashboard:'Dashboard', search:'Discover', library:'My Library', collections:'Collections', stats:'Statistics', settings:'Settings' };
@@ -2176,10 +2717,14 @@ function closeSidebar() {
 function applyTheme() {
   const isDark = settings.theme === 'dark';
   document.documentElement.setAttribute('data-theme', settings.theme);
-  document.querySelector('.toggle-switch').classList.toggle('on', isDark);
+  document.querySelector('.toggle-switch')?.classList.toggle('on', isDark);
   const tts = document.getElementById('theme-toggle-settings');
   if (tts) tts.classList.toggle('on', isDark);
-  document.querySelector('.theme-toggle').childNodes[2].textContent = isDark ? ' Light Mode' : ' Dark Mode';
+  const themeBtn = document.querySelector('.theme-toggle');
+  if (themeBtn) {
+    const txt = themeBtn.childNodes[2];
+    if (txt) txt.textContent = isDark ? ' Light Mode' : ' Dark Mode';
+  }
 }
 
 function toggleTheme() {
@@ -2266,7 +2811,8 @@ function openEditModal(bookId) {
 
 function clearBookForm() {
   ['f-title','f-author','f-genre','f-isbn','f-date-read','f-notes','f-copies','f-borrowed-from','cover-url-input','f-pages','f-pages-read'].forEach(id => {
-    document.getElementById(id).value = '';
+    const el = document.getElementById(id);
+    if (el) el.value = '';
   });
   document.getElementById('f-status').value = 'want';
   document.getElementById('own-physical').checked = false;
@@ -2304,7 +2850,7 @@ function updateCoverPreview() {
 function toggleCheckbox(labelId, inputId) {
   const input = document.getElementById(inputId);
   const label = document.getElementById(labelId);
-  label.classList.toggle('checked', input.checked);
+  if (input && label) label.classList.toggle('checked', input.checked);
 }
 
 function setRating(val) {
@@ -2327,16 +2873,17 @@ function renderCollectionCheckboxes(selected = []) {
   cont.innerHTML = collections.map(col => `
     <label class="checkbox-item ${selected.includes(col.id) ? 'checked' : ''}" id="col-check-${col.id}" style="margin:2px;">
       <input type="checkbox" value="${col.id}" ${selected.includes(col.id) ? 'checked' : ''} 
-        onchange="toggleCheckbox('col-check-${col.id}', 'col-check-input-${col.id}'); this.closest('label').classList.toggle('checked', this.checked)"/>
+        onchange="this.closest('label').classList.toggle('checked', this.checked)"/>
       ${col.emoji} ${col.name}
     </label>
   `).join('');
 }
 
-function saveBook() {
+async function saveBook() {
   const title = document.getElementById('f-title').value.trim();
   const author = document.getElementById('f-author').value.trim();
   if (!title) { showToast('Please enter a book title', 'error'); return; }
+  if (!uid()) { showToast('Please sign in to save books', 'error'); return; }
 
   const selectedCols = Array.from(document.querySelectorAll('#collection-checkboxes input:checked')).map(i => i.value);
   const coverUrl = document.getElementById('cover-url-input').value.trim();
@@ -2362,39 +2909,30 @@ function saveBook() {
     description: document.getElementById('modal-book-desc-display').textContent || '',
   };
 
+  closeModal('book-modal');
+
   if (editingBookId) {
-    const idx = books.findIndex(b => b.id === editingBookId);
-    if (idx >= 0) {
-      books[idx] = { ...books[idx], ...bookData, updatedAt: Date.now() };
-      showToast(`"${title}" updated`, 'success');
-      addActivity(`Updated <strong>${title}</strong>`, '✏️', '#6a9bbf');
-    }
+    const existing = books.find(b => b.id === editingBookId);
+    const updated = { ...existing, ...bookData, updatedAt: Date.now() };
+    await saveBookToFirestore(updated);
+    showToast(`"${title}" updated`, 'success');
+    addActivity(`Updated <strong>${title}</strong>`, '✏️', '#6a9bbf');
   } else {
     const book = { id: genId(), ...bookData, dateAdded: Date.now() };
-    books.unshift(book);
+    await saveBookToFirestore(book);
     showToast(`"${title}" added to library`, 'success');
-    addActivity(`Added <strong>${title}</strong> by ${author}`, '📚', '#d4884a');
+    addActivity(`Added <strong>${title}</strong> by ${author || 'Unknown'}`, '📚', '#d4884a');
   }
-
-  save();
-  closeModal('book-modal');
-  renderLibrary();
-  refreshDashboard();
-  updateLibCount();
 }
 
-function deleteCurrentBook() {
+async function deleteCurrentBook() {
   if (!editingBookId) return;
   const book = books.find(b => b.id === editingBookId);
   if (!book) return;
   if (!confirm(`Delete "${book.title}"? This cannot be undone.`)) return;
-  books = books.filter(b => b.id !== editingBookId);
   addActivity(`Removed <strong>${book.title}</strong>`, '🗑️', '#c0605a');
-  save();
   closeModal('book-modal');
-  renderLibrary();
-  refreshDashboard();
-  updateLibCount();
+  await deleteBookFromFirestore(editingBookId);
   showToast(`"${book.title}" deleted`, 'info');
 }
 
@@ -2412,13 +2950,14 @@ async function refreshCover() {
   const sources = [
     isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null,
     `https://books.google.com/books/content?q=${encodeURIComponent(title + ' ' + author)}&img=1&zoom=1&size=large`,
-    `https://covers.openlibrary.org/b/olid/${encodeURIComponent(isbn || title)}-L.jpg`,
+    isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg` : null,
+    `https://covers.openlibrary.org/b/title/${encodeURIComponent(title)}-L.jpg`,
   ].filter(Boolean);
 
   const source = sources[coverRefreshAttempts[key] % sources.length];
   document.getElementById('cover-url-input').value = source;
   updateCoverPreview();
-  showToast('Cover refreshed! Check the preview.', 'success');
+  showToast('Cover updated! Check the preview.', 'success');
 }
 
 // ---- GOOGLE BOOKS SEARCH ----
@@ -2466,11 +3005,11 @@ function renderSearchResults(results) {
     return `
       <div class="search-result-card" style="animation-delay:${i * 0.04}s">
         <div class="search-cover">
-          ${book.coverUrl ? `<img src="${book.coverUrl}" onerror="this.parentElement.innerHTML='📚'" alt="${book.title}"/>` : '📚'}
+          ${book.coverUrl ? `<img src="${book.coverUrl}" onerror="this.parentElement.innerHTML='📚'" alt="${escHtml(book.title)}"/>` : '📚'}
         </div>
         <div class="search-book-title">${escHtml(book.title)}</div>
         <div class="search-book-author">${escHtml(book.author)}</div>
-        <button class="search-add-btn ${inLib ? 'added' : ''}" onclick="addFromSearch(${i})" ${inLib ? '' : ''}>
+        <button class="search-add-btn ${inLib ? 'added' : ''}" onclick="addFromSearch(${i})">
           ${inLib ? '✓ In Library' : '+ Add to Library'}
         </button>
       </div>
@@ -2495,7 +3034,6 @@ function renderLibrary() {
     return matchStatus && matchFilter;
   });
 
-  // Sort
   filtered.sort((a, b) => {
     if (currentSortBy === 'title') return a.title.localeCompare(b.title);
     if (currentSortBy === 'author') return a.author.localeCompare(b.author);
@@ -2640,33 +3178,30 @@ function openBookDetail(bookId) {
 function openNewCollectionModal() {
   document.getElementById('col-name').value = '';
   selectedEmoji = '📚';
-  document.querySelectorAll('.emoji-opt').forEach(e => e.style.background = '');
+  document.querySelectorAll('.emoji-opt').forEach(e => { e.style.background = ''; e.style.borderColor = ''; });
   openModal('collection-modal');
 }
 
 function selectEmoji(el, emoji) {
-  document.querySelectorAll('.emoji-opt').forEach(e => e.style.background = '');
+  document.querySelectorAll('.emoji-opt').forEach(e => { e.style.background = ''; e.style.borderColor = ''; });
   el.style.background = 'var(--accent-soft)';
   el.style.borderColor = 'var(--accent)';
   selectedEmoji = emoji;
   document.getElementById('col-emoji').value = emoji;
 }
 
-function saveCollection() {
+async function saveCollection() {
   const name = document.getElementById('col-name').value.trim();
   if (!name) { showToast('Enter a collection name', 'error'); return; }
   const col = { id: genId(), name, emoji: selectedEmoji, createdAt: Date.now() };
-  collections.push(col);
-  save();
   closeModal('collection-modal');
-  renderCollections();
+  await saveCollectionToFirestore(col);
   showToast(`Collection "${name}" created`, 'success');
 }
 
 function renderCollections() {
   const grid = document.getElementById('collections-grid');
-  const allCols = [...collections];
-  grid.innerHTML = allCols.map(col => {
+  grid.innerHTML = collections.map(col => {
     const colBooks = books.filter(b => (b.collections || []).includes(col.id));
     const coverPreviews = colBooks.slice(0, 4).map(b => `
       <div class="collection-cover-mini">${b.coverUrl ? `<img src="${b.coverUrl}" onerror="this.innerHTML='📚'" alt=""/>` : '📚'}</div>
@@ -2788,7 +3323,7 @@ function refreshDashboard() {
     actList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">No activity yet. Add some books!</div>';
   }
 
-  // Collections in sidebar
+  // Collections in dashboard
   const dashCols = document.getElementById('dash-collections');
   if (collections.length) {
     dashCols.innerHTML = collections.map(col => {
@@ -2869,7 +3404,7 @@ function renderStats() {
 
   // Rating dist
   const ratingDist = [0,0,0,0,0];
-  rated.forEach(b => ratingDist[b.rating-1]++);
+  rated.forEach(b => { if (b.rating >= 1 && b.rating <= 5) ratingDist[b.rating-1]++; });
   const maxRating = Math.max(...ratingDist, 1);
   document.getElementById('rating-chart').innerHTML = [5,4,3,2,1].map(r => `
     <div class="bar-row">
@@ -2888,7 +3423,7 @@ function showSettingsPanel(id, el) {
   el.classList.add('active');
 }
 
-function saveGoal() {
+async function saveGoal() {
   const val = parseInt(document.getElementById('goal-input').value);
   if (!val || val < 1) { showToast('Enter a valid goal (1+)', 'error'); return; }
   settings.goal = val;
@@ -2903,12 +3438,13 @@ function importGoodreads(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try {
       const text = e.target.result;
       const rows = parseCSV(text);
       if (!rows.length) { showToast('No books found in CSV', 'error'); return; }
       let added = 0;
+      const batch = [];
       rows.forEach(row => {
         const title = row['Title'] || row['title'];
         const author = row['Author'] || row['author'] || row['Author l-f'];
@@ -2918,27 +3454,30 @@ function importGoodreads(event) {
         const status = statusMap[grShelf] || 'want';
         const rating = parseInt(row['My Rating'] || row['rating']) || 0;
         if (!books.find(b => b.title.toLowerCase() === title.toLowerCase())) {
-          books.push({
+          const book = {
             id: genId(),
             title: title.trim(),
             author: (author || 'Unknown').replace(/,\s*(\w+)\s*$/, ' $1').trim(),
             genre: row['Bookshelves'] || '',
-            status,
-            rating,
+            status, rating,
             dateRead: row['Date Read'] || '',
             pages: parseInt(row['Number of Pages'] || row['pages']) || 0,
             notes: row['My Review'] || '',
             dateAdded: Date.now(),
             collections: [],
-          });
+          };
+          batch.push(book);
           added++;
         }
       });
-      save();
-      renderLibrary();
-      refreshDashboard();
-      showToast(`Imported ${added} books from Goodreads`, 'success');
+      // Save each book to Firestore
+      showToast(`Importing ${added} books...`, 'info');
+      for (const book of batch) {
+        await saveBookToFirestore(book);
+      }
+      showToast(`Imported ${added} books from Goodreads ✓`, 'success');
     } catch(err) {
+      console.error(err);
       showToast('Failed to parse Goodreads CSV', 'error');
     }
   };
@@ -2950,17 +3489,26 @@ function importShelfwise(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try {
       const data = JSON.parse(e.target.result);
-      if (data.books) books = data.books;
-      if (data.collections) collections = data.collections;
-      if (data.settings) settings = { ...settings, ...data.settings };
-      save();
-      renderLibrary();
-      refreshDashboard();
-      applyTheme();
-      showToast(`Library restored from backup`, 'success');
+      if (data.books) {
+        showToast(`Importing ${data.books.length} books...`, 'info');
+        for (const book of data.books) {
+          await saveBookToFirestore(book);
+        }
+      }
+      if (data.collections) {
+        for (const col of data.collections) {
+          await saveCollectionToFirestore(col);
+        }
+      }
+      if (data.settings) {
+        settings = { ...settings, ...data.settings };
+        await saveSettingsToFirestore();
+        applyTheme();
+      }
+      showToast('Library restored from backup ✓', 'success');
     } catch(err) {
       showToast('Invalid Shelfwise JSON file', 'error');
     }
@@ -2985,12 +3533,21 @@ function exportData(format) {
   }
 }
 
-function clearAllData() {
-  if (!confirm('This will delete ALL your books, collections, and settings. This cannot be undone. Are you absolutely sure?')) return;
-  books = [];
-  collections = [];
+async function clearAllData() {
+  if (!confirm('This will permanently delete ALL your books, collections, and settings from the cloud. This CANNOT be undone. Type DELETE to confirm.')) return;
+  const conf = prompt('Type DELETE to confirm:');
+  if (conf !== 'DELETE') return;
+  showToast('Clearing all data...', 'info');
+  // Delete all books
+  for (const book of [...books]) {
+    await deleteBookFromFirestore(book.id);
+  }
+  // Delete all collections
+  for (const col of [...collections]) {
+    try { await fb().deleteDoc(fb().doc(collectionsCol(), col.id)); } catch(e) {}
+  }
   settings = { theme: settings.theme, goal: 0, goalYear: new Date().getFullYear() };
-  save();
+  await saveSettingsToFirestore();
   renderLibrary();
   renderCollections();
   refreshDashboard();
@@ -3005,7 +3562,7 @@ function showToast(message, type = 'info') {
   toast.className = `toast ${type}`;
   toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${message}</span>`;
   cont.appendChild(toast);
-  setTimeout(() => { toast.classList.add('toast-fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+  setTimeout(() => { toast.classList.add('toast-fade-out'); setTimeout(() => toast.remove(), 300); }, 3500);
 }
 
 // ---- HELPERS ----
@@ -3045,31 +3602,17 @@ function parseCSV(text) {
 
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded', () => {
-  load();
+  loadLocal();
   applyTheme();
-  refreshDashboard();
-  
   const year = new Date().getFullYear();
   document.getElementById('goal-year').textContent = year;
   document.getElementById('goal-year-setting').textContent = year;
   if (settings.goal) document.getElementById('goal-input').value = settings.goal;
-
   const themeToggle = document.getElementById('theme-toggle-settings');
   if (themeToggle) themeToggle.classList.toggle('on', settings.theme === 'dark');
-  
-  // Demo data prompt
-  if (books.length === 0) {
-    setTimeout(() => {
-      showToast('Welcome to Shelfwise! Search for books to get started. 📚', 'info');
-    }, 500);
-  }
-});
-
-// Make sidebar nav items work - add all onclick to sidebar nav
-document.querySelectorAll('.nav-item').forEach(item => {
-  const fn = item.getAttribute('onclick');
-  if (fn) item.addEventListener('click', () => {});
+  refreshDashboard();
 });
 </script>
+
 </body>
 </html>
