@@ -99,6 +99,97 @@
   --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
 }
 
+/* ========== COLOUR THEMES ========== */
+:root[data-theme="midnight"] {
+  --bg-base: #0d0f1a; --bg-surface: #131628; --bg-elevated: #1a2035;
+  --bg-card: #1f2640; --border: #2d3560; --border-subtle: #1a2035;
+  --text-primary: #e8eaf8; --text-secondary: #8892c8; --text-muted: #4a5280;
+  --accent: #7b8cde; --accent-hover: #9aaae8; --accent-soft: rgba(123,140,222,0.15);
+  --accent-glow: rgba(123,140,222,0.08);
+  --green: #6db88a; --green-soft: rgba(109,184,138,0.15);
+  --blue: #6ab0e0; --blue-soft: rgba(106,176,224,0.15);
+  --red: #d06070; --red-soft: rgba(208,96,112,0.15);
+  --purple: #b088e0; --purple-soft: rgba(176,136,224,0.15);
+  --star: #e8d060; --shadow: 0 4px 24px rgba(0,0,0,0.5); --shadow-lg: 0 8px 40px rgba(0,0,0,0.7);
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.4);
+}
+:root[data-theme="forest"] {
+  --bg-base: #0c1208; --bg-surface: #141c0f; --bg-elevated: #1c2814;
+  --bg-card: #22301a; --border: #344828; --border-subtle: #1c2814;
+  --text-primary: #e0edd8; --text-secondary: #8aaa78; --text-muted: #4a6038;
+  --accent: #7abf50; --accent-hover: #90d060; --accent-soft: rgba(122,191,80,0.15);
+  --accent-glow: rgba(122,191,80,0.08);
+  --green: #60c880; --green-soft: rgba(96,200,128,0.15);
+  --blue: #6ab8a8; --blue-soft: rgba(106,184,168,0.15);
+  --red: #c06858; --red-soft: rgba(192,104,88,0.15);
+  --purple: #98a858; --purple-soft: rgba(152,168,88,0.15);
+  --star: #d8c050; --shadow: 0 4px 24px rgba(0,0,0,0.45); --shadow-lg: 0 8px 40px rgba(0,0,0,0.65);
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.35);
+}
+:root[data-theme="rose"] {
+  --bg-base: #1a0d10; --bg-surface: #261218; --bg-elevated: #301820;
+  --bg-card: #3a1e28; --border: #5a2e3a; --border-subtle: #301820;
+  --text-primary: #f5e0e5; --text-secondary: #c88898; --text-muted: #6a4850;
+  --accent: #e0708a; --accent-hover: #f08098; --accent-soft: rgba(224,112,138,0.15);
+  --accent-glow: rgba(224,112,138,0.08);
+  --green: #80b890; --green-soft: rgba(128,184,144,0.15);
+  --blue: #90a8c8; --blue-soft: rgba(144,168,200,0.15);
+  --red: #e05060; --red-soft: rgba(224,80,96,0.15);
+  --purple: #c088c0; --purple-soft: rgba(192,136,192,0.15);
+  --star: #e8c860; --shadow: 0 4px 24px rgba(0,0,0,0.45); --shadow-lg: 0 8px 40px rgba(0,0,0,0.65);
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.35);
+}
+:root[data-theme="slate"] {
+  --bg-base: #0e1218; --bg-surface: #161c24; --bg-elevated: #1e2630;
+  --bg-card: #242e3a; --border: #38485a; --border-subtle: #1e2630;
+  --text-primary: #dce8f0; --text-secondary: #7898a8; --text-muted: #445868;
+  --accent: #50a8c8; --accent-hover: #68c0e0; --accent-soft: rgba(80,168,200,0.15);
+  --accent-glow: rgba(80,168,200,0.08);
+  --green: #60b880; --green-soft: rgba(96,184,128,0.15);
+  --blue: #70a8e0; --blue-soft: rgba(112,168,224,0.15);
+  --red: #c06868; --red-soft: rgba(192,104,104,0.15);
+  --purple: #9880c8; --purple-soft: rgba(152,128,200,0.15);
+  --star: #d8b850; --shadow: 0 4px 24px rgba(0,0,0,0.45); --shadow-lg: 0 8px 40px rgba(0,0,0,0.65);
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.35);
+}
+
+/* Theme picker swatches */
+.theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+.theme-swatch {
+  border-radius: 10px; padding: 12px 10px; cursor: pointer;
+  border: 2px solid transparent; transition: all 0.15s;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.theme-swatch:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.theme-swatch.active { border-color: white !important; }
+.theme-swatch-dots { display: flex; gap: 4px; }
+.theme-swatch-dot { width: 10px; height: 10px; border-radius: 50%; }
+.theme-swatch-name { font-size: 11px; font-weight: 500; color: white; opacity: 0.9; }
+
+/* Barcode scanner modal */
+#scanner-modal .modal { max-width: 420px; }
+#scanner-video { width: 100%; border-radius: 10px; background: #000; display: block; }
+#scanner-canvas { display: none; }
+.scanner-overlay {
+  position: relative; border-radius: 10px; overflow: hidden;
+  background: #000;
+}
+.scanner-frame {
+  position: absolute; inset: 20%;
+  border: 2px solid #7abf50;
+  border-radius: 4px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+  pointer-events: none;
+}
+.scanner-line {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #7abf50, transparent);
+  animation: scanline 2s ease-in-out infinite;
+  top: 50%;
+}
+@keyframes scanline { 0%,100% { top: 20%; } 50% { top: 80%; } }
+.scanner-status { text-align: center; padding: 10px; font-size: 13px; color: var(--text-muted); }
+
 /* ========== RESET & BASE ========== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -976,9 +1067,31 @@ a { color: inherit; text-decoration: none; }
 }
 .search-hero p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
 .search-hero-bar {
-  max-width: 500px;
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-elevated);
+  border-radius: 28px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  max-width: 600px;
   margin: 0 auto;
-  position: relative;
+  height: 50px;
+}
+.search-hero-bar svg {
+  width: 18px; height: 18px;
+  color: var(--text-muted);
+  margin: 0 12px 0 18px;
+  align-self: center;
+  flex-shrink: 0;
+}
+.search-hero-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: var(--text-primary);
+  padding: 0;
 }
 .search-hero-bar input {
   width: 100%;
@@ -1969,11 +2082,11 @@ a { color: inherit; text-decoration: none; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <span class="top-bar-title" id="page-title">Dashboard</span>
-      <div class="search-bar" style="display:none" id="top-search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
-        <input type="text" placeholder="Filter library..." id="lib-filter-input" oninput="filterLibrary()" />
-      </div>
       <div style="margin-left:auto; display:flex; gap:8px;" id="top-actions">
+        <button class="btn btn-secondary" onclick="openScanner()" id="scan-btn" title="Scan barcode" style="padding:8px 12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="1" width="5" height="5"/><rect x="1" y="9" width="5" height="5"/><rect x="1" y="17" width="5" height="5"/><rect x="9" y="1" width="5" height="22"/><rect x="17" y="1" width="6" height="5"/><rect x="17" y="9" width="6" height="5"/><rect x="17" y="17" width="6" height="5"/></svg>
+          Scan
+        </button>
         <button class="btn btn-primary" onclick="openAddModal()" id="add-book-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Book
@@ -2091,7 +2204,10 @@ a { color: inherit; text-decoration: none; }
           <p>Search millions of books and add them to your library</p>
           <div class="search-hero-bar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
-            <input type="text" id="discover-search" placeholder="Search by title, author, ISBN..." onkeydown="if(event.key==='Enter') searchBooks()" />
+            <input type="text" id="discover-search" placeholder="Search by title, author, ISBN..." 
+              onkeydown="if(event.key==='Enter'){event.preventDefault();searchBooks();}" 
+              autocomplete="off" autocorrect="off" spellcheck="false"/>
+            <button onclick="searchBooks()" style="background:var(--accent);border:none;border-radius:0 24px 24px 0;padding:0 18px;color:white;font-size:13px;font-weight:500;cursor:pointer;flex-shrink:0;height:100%;">Search</button>
           </div>
           <div style="display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
             <button class="filter-chip" onclick="searchBooks('fantasy')">Fantasy</button>
@@ -2108,10 +2224,6 @@ a { color: inherit; text-decoration: none; }
       <!-- ===== LIBRARY PAGE ===== -->
       <div class="page" id="page-library">
         <div class="filter-row">
-          <div id="top-search-wrap-lib" style="position:relative; flex:1; max-width:280px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-muted);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
-            <input type="text" class="form-input" style="padding-left:32px;border-radius:20px;" placeholder="Filter books..." id="lib-filter" oninput="filterLibrary()"/>
-          </div>
           <button class="filter-chip active" id="filter-all" onclick="setStatusFilter('all',this)">All</button>
           <button class="filter-chip" id="filter-reading" onclick="setStatusFilter('reading',this)">Reading</button>
           <button class="filter-chip" id="filter-read" onclick="setStatusFilter('read',this)">Read</button>
@@ -2241,13 +2353,63 @@ a { color: inherit; text-decoration: none; }
             <!-- APPEARANCE -->
             <div class="settings-panel active" id="sp-appearance">
               <div class="settings-section">
-                <h3>Appearance</h3>
-                <div class="setting-row">
-                  <div class="setting-info">
-                    <div class="setting-name">Dark Mode</div>
-                    <div class="setting-desc">Switch between light and dark theme</div>
+                <h3>Colour Theme</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Choose a theme for your library.</p>
+                <div class="theme-grid" id="theme-picker">
+                  <div class="theme-swatch" data-theme="dark" onclick="setTheme('dark')" style="background:linear-gradient(135deg,#1a1612,#2a2318);">
+                    <div class="theme-swatch-dots">
+                      <div class="theme-swatch-dot" style="background:#d4884a;"></div>
+                      <div class="theme-swatch-dot" style="background:#f0e8d8;"></div>
+                      <div class="theme-swatch-dot" style="background:#3d3428;"></div>
+                    </div>
+                    <div class="theme-swatch-name">Ink &amp; Amber</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.5);">Default dark</div>
                   </div>
-                  <div class="big-toggle on" id="theme-toggle-settings" onclick="toggleTheme()"></div>
+                  <div class="theme-swatch" data-theme="light" onclick="setTheme('light')" style="background:linear-gradient(135deg,#ede6d8,#fff8ee);">
+                    <div class="theme-swatch-dots">
+                      <div class="theme-swatch-dot" style="background:#c4700a;"></div>
+                      <div class="theme-swatch-dot" style="background:#1a150f;"></div>
+                      <div class="theme-swatch-dot" style="background:#d4c8b0;"></div>
+                    </div>
+                    <div class="theme-swatch-name" style="color:#1a150f;">Parchment</div>
+                    <div style="font-size:10px;color:rgba(0,0,0,0.4);">Warm light</div>
+                  </div>
+                  <div class="theme-swatch" data-theme="midnight" onclick="setTheme('midnight')" style="background:linear-gradient(135deg,#0d0f1a,#1f2640);">
+                    <div class="theme-swatch-dots">
+                      <div class="theme-swatch-dot" style="background:#7b8cde;"></div>
+                      <div class="theme-swatch-dot" style="background:#e8eaf8;"></div>
+                      <div class="theme-swatch-dot" style="background:#2d3560;"></div>
+                    </div>
+                    <div class="theme-swatch-name">Midnight Blue</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.4);">Deep navy</div>
+                  </div>
+                  <div class="theme-swatch" data-theme="forest" onclick="setTheme('forest')" style="background:linear-gradient(135deg,#0c1208,#22301a);">
+                    <div class="theme-swatch-dots">
+                      <div class="theme-swatch-dot" style="background:#7abf50;"></div>
+                      <div class="theme-swatch-dot" style="background:#e0edd8;"></div>
+                      <div class="theme-swatch-dot" style="background:#344828;"></div>
+                    </div>
+                    <div class="theme-swatch-name">Forest</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.4);">Dark green</div>
+                  </div>
+                  <div class="theme-swatch" data-theme="rose" onclick="setTheme('rose')" style="background:linear-gradient(135deg,#1a0d10,#3a1e28);">
+                    <div class="theme-swatch-dots">
+                      <div class="theme-swatch-dot" style="background:#e0708a;"></div>
+                      <div class="theme-swatch-dot" style="background:#f5e0e5;"></div>
+                      <div class="theme-swatch-dot" style="background:#5a2e3a;"></div>
+                    </div>
+                    <div class="theme-swatch-name">Rose</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.4);">Warm pink</div>
+                  </div>
+                  <div class="theme-swatch" data-theme="slate" onclick="setTheme('slate')" style="background:linear-gradient(135deg,#0e1218,#242e3a);">
+                    <div class="theme-swatch-dots">
+                      <div class="theme-swatch-dot" style="background:#50a8c8;"></div>
+                      <div class="theme-swatch-dot" style="background:#dce8f0;"></div>
+                      <div class="theme-swatch-dot" style="background:#38485a;"></div>
+                    </div>
+                    <div class="theme-swatch-name">Slate</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.4);">Cool grey-blue</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2870,7 +3032,7 @@ function showPage(page) {
   if (mob) mob.classList.add('active');
 
   document.getElementById('page-title').textContent = pageTitles[page] || page;
-  document.getElementById('top-search-wrap').style.display = (page === 'library') ? 'block' : 'none';
+  // search wrap removed
   document.getElementById('add-book-btn').style.display = (page === 'settings') ? 'none' : 'flex';
   closeSidebar();
 
@@ -2890,23 +3052,37 @@ function closeSidebar() {
 }
 
 // ---- THEME ----
+// applyTheme merged above
+
+const THEMES = ['dark','light','midnight','forest','rose','slate'];
+
+function setTheme(name) {
+  settings.theme = name;
+  applyTheme();
+  save();
+}
+
+function toggleTheme() {
+  // Legacy toggle: cycle dark/light only (used by sidebar toggle)
+  settings.theme = (settings.theme === 'dark' || !THEMES.includes(settings.theme)) ? 'light' : 'dark';
+  applyTheme();
+  save();
+}
+
 function applyTheme() {
-  const isDark = settings.theme === 'dark';
-  document.documentElement.setAttribute('data-theme', settings.theme);
-  document.querySelector('.toggle-switch')?.classList.toggle('on', isDark);
-  const tts = document.getElementById('theme-toggle-settings');
-  if (tts) tts.classList.toggle('on', isDark);
+  const theme = THEMES.includes(settings.theme) ? settings.theme : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  // Update swatch active states
+  document.querySelectorAll('.theme-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.theme === theme);
+  });
+  // Update legacy sidebar toggle
+  const isDark = (theme !== 'light');
   const themeBtn = document.querySelector('.theme-toggle');
   if (themeBtn) {
     const txt = themeBtn.childNodes[2];
     if (txt) txt.textContent = isDark ? ' Light Mode' : ' Dark Mode';
   }
-}
-
-function toggleTheme() {
-  settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
-  applyTheme();
-  save();
 }
 
 // ---- MODALS ----
@@ -3122,68 +3298,86 @@ async function deleteCurrentBook() {
   showToast(`"${book.title}" deleted`, 'info');
 }
 
-// ---- COVER SEARCH (Google Books + Open Library + Hardcover) ----
+// ---- COVER REFRESH (cycle through sources) ----
 async function refreshCover() {
   const title = document.getElementById('f-title').value.trim();
   const author = document.getElementById('f-author').value.trim();
   const isbn = document.getElementById('f-isbn').value.trim();
   if (!title && !isbn) { showToast('Enter a title or ISBN first', 'error'); return; }
 
-  showToast('Searching for cover...', 'info');
-  const key = isbn || `${title} ${author}`;
+  const key = isbn || `${title}_${author}`;
   coverRefreshAttempts[key] = (coverRefreshAttempts[key] || 0) + 1;
 
-  const sources = [
-    // Google Books
-    `https://books.google.com/books/content?q=${encodeURIComponent(title + ' ' + author)}&img=1&zoom=1&size=large`,
-    // Open Library ISBN
-    isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null,
-    // Open Library title
-    `https://covers.openlibrary.org/b/title/${encodeURIComponent(title)}-L.jpg`,
-    // Open Library ISBN medium
-    isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg` : null,
-    // Hardcover (via Open Library fallback path)
-    isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false` : null,
-  ].filter(Boolean);
+  // Try to get the Google Books ID first for better cover URLs
+  showToast('Fetching cover...', 'info');
 
-  const source = sources[coverRefreshAttempts[key] % sources.length];
-  document.getElementById('cover-url-input').value = source;
-  updateCoverPreview();
-  showToast(`Trying source ${(coverRefreshAttempts[key] % sources.length) + 1}/${sources.length} — check preview!`, 'success');
+  try {
+    const searchQ = isbn ? `isbn:${isbn}` : `intitle:${title}${author ? '+inauthor:'+author : ''}`;
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQ)}&maxResults=5`);
+    const data = await res.json();
+
+    // Build a list of all possible cover URLs from results
+    const sources = [];
+    (data.items || []).forEach(item => {
+      const id = item.id;
+      const imgLinks = item.volumeInfo?.imageLinks || {};
+      const isbns = item.volumeInfo?.industryIdentifiers || [];
+      const isbn13 = isbns.find(i => i.type === 'ISBN_13')?.identifier;
+      const isbn10 = isbns.find(i => i.type === 'ISBN_10')?.identifier;
+
+      // Google Books content API (most reliable)
+      sources.push(`https://books.google.com/books/content?id=${id}&printsec=frontcover&img=1&zoom=1&source=gbs_api`);
+      // Higher zoom for larger image
+      sources.push(`https://books.google.com/books/content?id=${id}&printsec=frontcover&img=1&zoom=2&source=gbs_api`);
+      if (imgLinks.thumbnail) sources.push(imgLinks.thumbnail.replace('http:', 'https:').replace('&edge=curl',''));
+      if (isbn13) sources.push(`https://covers.openlibrary.org/b/isbn/${isbn13}-L.jpg`);
+      if (isbn10) sources.push(`https://covers.openlibrary.org/b/isbn/${isbn10}-L.jpg`);
+    });
+
+    // Also add Open Library title search
+    sources.push(`https://covers.openlibrary.org/b/title/${encodeURIComponent(title)}-L.jpg`);
+
+    if (sources.length === 0) {
+      showToast('No covers found. Try pasting a URL manually.', 'error');
+      return;
+    }
+
+    const idx = coverRefreshAttempts[key] % sources.length;
+    const source = sources[idx];
+    document.getElementById('cover-url-input').value = source;
+    updateCoverPreview();
+    showToast(`Trying cover ${idx + 1} of ${sources.length} — check preview!`, 'success');
+
+  } catch(e) {
+    showToast('Cover search failed. Try pasting a URL manually.', 'error');
+  }
 }
 
-// Try to auto-fetch best cover from Hardcover API (GraphQL) then fall back to Google Books
-async function fetchBestCover(title, author, isbn) {
-  // Try Hardcover GraphQL first
-  try {
-    const hcQuery = `{"query":"query { books(where: {title: {_ilike: \\"${title.replace(/"/g, '')}\\"}} limit: 1) { image { url } } }"}`;
-    const hcRes = await fetch('https://api.hardcover.app/v1/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: hcQuery
-    });
-    if (hcRes.ok) {
-      const hcData = await hcRes.json();
-      const url = hcData?.data?.books?.[0]?.image?.url;
-      if (url) return url;
-    }
-  } catch(e) { /* fall through */ }
+// ---- BOOK SEARCH (Google Books + Open Library fallback) ----
+function getBestCoverUrl(item) {
+  const info = item.volumeInfo || {};
+  const imgLinks = info.imageLinks || {};
+  const gbId = item.id;
+  const isbns = info.industryIdentifiers || [];
+  const isbn13 = isbns.find(i => i.type === 'ISBN_13')?.identifier;
+  const isbn10 = isbns.find(i => i.type === 'ISBN_10')?.identifier;
 
-  // Fall back to Google Books
-  try {
-    const q = isbn ? `isbn:${isbn}` : encodeURIComponent(`${title} ${author}`);
-    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`);
-    const data = await res.json();
-    const imgLinks = data.items?.[0]?.volumeInfo?.imageLinks;
-    if (imgLinks) {
-      return (imgLinks.extraLarge || imgLinks.large || imgLinks.thumbnail || '').replace('http:', 'https:');
-    }
-  } catch(e) {}
-
+  // Priority 1: Google Books cover via their CDN (zoom=1 is thumbnail, zoom=0 is small)
+  // Use the API thumbnail but force https and upgrade zoom
+  if (imgLinks.thumbnail) {
+    return imgLinks.thumbnail
+      .replace('http:', 'https:')
+      .replace('zoom=1', 'zoom=1')  // keep zoom=1, it's reliable
+      .replace('&edge=curl', '');   // remove curl effect
+  }
+  // Priority 2: Open Library by ISBN (very reliable if ISBN exists)
+  if (isbn13) return `https://covers.openlibrary.org/b/isbn/${isbn13}-L.jpg`;
+  if (isbn10) return `https://covers.openlibrary.org/b/isbn/${isbn10}-L.jpg`;
+  // Priority 3: Google Books content API (works without auth)
+  if (gbId) return `https://books.google.com/books/content?id=${gbId}&printsec=frontcover&img=1&zoom=1&source=gbs_api`;
   return '';
 }
 
-// ---- GOOGLE BOOKS SEARCH ----
 async function searchBooks(query) {
   const input = document.getElementById('discover-search');
   const q = query || input.value.trim();
@@ -3192,28 +3386,49 @@ async function searchBooks(query) {
   showPage('search');
 
   const grid = document.getElementById('search-results-grid');
-  grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);">🔍 Searching...</div>';
+  grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:var(--text-muted);"><div style="font-size:32px;margin-bottom:12px;">🔍</div><div>Searching Google Books...</div></div>';
 
   try {
-    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=20`);
+    // Google Books API - no key needed for basic search
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=20&printType=books&langRestrict=en`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    lastSearchResults = (data.items || []).map(item => {
+
+    if (!data.items || data.items.length === 0) {
+      grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px; color:var(--text-muted);">
+        <div style="font-size:32px;margin-bottom:12px;">📭</div>
+        <div style="font-size:15px; margin-bottom:8px;">No results for "<strong>${escHtml(q)}</strong>"</div>
+        <div style="font-size:13px;">Try a different title, author, or ISBN</div>
+      </div>`;
+      return;
+    }
+
+    lastSearchResults = data.items.map(item => {
       const info = item.volumeInfo || {};
-      const imgLinks = info.imageLinks || {};
+      const isbns = info.industryIdentifiers || [];
+      const isbn13 = isbns.find(i => i.type === 'ISBN_13')?.identifier || '';
       return {
         id: item.id,
         title: info.title || 'Unknown Title',
-        author: (info.authors || ['Unknown']).join(', '),
+        author: (info.authors || ['Unknown Author']).join(', '),
         genre: (info.categories || []).join(', '),
         pages: info.pageCount || 0,
         description: info.description || '',
-        isbn: (info.industryIdentifiers || []).find(i => i.type === 'ISBN_13')?.identifier || item.id,
-        coverUrl: (imgLinks.thumbnail || imgLinks.smallThumbnail || '').replace('http:', 'https:')
+        isbn: isbn13 || item.id,
+        publisher: info.publisher || '',
+        publishedDate: info.publishedDate || '',
+        coverUrl: getBestCoverUrl(item),
       };
     });
     renderSearchResults(lastSearchResults);
   } catch(e) {
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--red);">Search failed. Check your connection and try again.</div>';
+    console.error('Search error:', e);
+    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px; color:var(--red);">
+      <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+      <div>Search failed: ${escHtml(e.message)}</div>
+      <div style="font-size:12px; margin-top:8px; color:var(--text-muted);">Check your internet connection and try again</div>
+    </div>`;
   }
 }
 
@@ -3277,7 +3492,7 @@ function bookCoverImg(book, fallbackSizeClass = '') {
 
 // ---- RENDER BOOK CARD ----
 function renderLibrary() {
-  const filter = (document.getElementById('lib-filter')?.value || '').toLowerCase();
+  const filter = ''; // search bar removed - use status filter chips
   let filtered = books.filter(b => {
     const matchStatus = currentStatusFilter === 'all' || b.status === currentStatusFilter;
     const matchFilter = !filter || 
@@ -3362,7 +3577,7 @@ function renderBookListItem(book, i) {
   `;
 }
 
-function filterLibrary() { renderLibrary(); }
+function filterLibrary() { renderLibrary(); } // filter via status chips + sort
 function setStatusFilter(status, el) {
   currentStatusFilter = status;
   document.querySelectorAll('#page-library .filter-chip').forEach(c => c.classList.remove('active'));
@@ -3781,7 +3996,12 @@ function showSettingsPanel(id, el) {
   document.querySelectorAll('.settings-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('sp-' + id).classList.add('active');
   el.classList.add('active');
-  // Load profile data when switching to profile panel
+  if (id === 'appearance') {
+    // Highlight active theme swatch
+    document.querySelectorAll('.theme-swatch').forEach(s => {
+      s.classList.toggle('active', s.dataset.theme === settings.theme);
+    });
+  }
   if (id === 'profile') {
     const nameEl = document.getElementById('profile-display-name');
     const emailEl = document.getElementById('profile-email');
@@ -3977,6 +4197,143 @@ function parseCSV(text) {
   });
 }
 
+
+// ========== BARCODE SCANNER ==========
+let scannerStream = null;
+let scannerInterval = null;
+let scannedBookData = null;
+let jsQRLoaded = false;
+
+async function loadJsQR() {
+  if (jsQRLoaded) return true;
+  return new Promise(resolve => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+    s.onload = () => { jsQRLoaded = true; resolve(true); };
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+}
+
+async function openScanner() {
+  openModal('scanner-modal');
+  document.getElementById('scanner-status').textContent = '📷 Loading scanner...';
+  document.getElementById('scanner-result').style.display = 'none';
+  document.getElementById('scanner-add-btn').style.display = 'none';
+  scannedBookData = null;
+
+  const libLoaded = await loadJsQR();
+  if (!libLoaded) {
+    document.getElementById('scanner-status').textContent = '❌ Could not load barcode library. Check your connection.';
+    return;
+  }
+
+  try {
+    scannerStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    const video = document.getElementById('scanner-video');
+    video.srcObject = scannerStream;
+    await video.play();
+    document.getElementById('scanner-status').textContent = '🔍 Scanning for barcode...';
+    startScanning();
+  } catch(e) {
+    if (e.name === 'NotAllowedError') {
+      document.getElementById('scanner-status').textContent = '🚫 Camera access denied. Please allow camera permissions and try again.';
+    } else {
+      document.getElementById('scanner-status').textContent = '❌ Could not access camera: ' + e.message;
+    }
+  }
+}
+
+function startScanning() {
+  const video = document.getElementById('scanner-video');
+  const canvas = document.getElementById('scanner-canvas');
+  const ctx = canvas.getContext('2d');
+
+  scannerInterval = setInterval(() => {
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Try jsQR for QR/barcodes
+    if (window.jsQR) {
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+      if (code && code.data) {
+        // Check if it looks like an ISBN (numeric, 10 or 13 digits)
+        const clean = code.data.replace(/[^0-9X]/gi, '');
+        if (clean.length === 13 || clean.length === 10) {
+          handleISBNDetected(clean);
+          return;
+        }
+      }
+    }
+  }, 300);
+}
+
+async function handleISBNDetected(isbn) {
+  clearInterval(scannerInterval);
+  stopCamera();
+  document.getElementById('scanner-status').textContent = '✅ Barcode detected!';
+  document.getElementById('scanner-isbn-display').textContent = isbn;
+  document.getElementById('scanner-result').style.display = 'block';
+  document.getElementById('scanner-book-preview').textContent = 'Looking up book...';
+
+  try {
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&maxResults=1`);
+    const data = await res.json();
+    const item = data.items?.[0];
+    if (item) {
+      const info = item.volumeInfo || {};
+      const isbns = info.industryIdentifiers || [];
+      const isbn13 = isbns.find(i => i.type === 'ISBN_13')?.identifier || isbn;
+      scannedBookData = {
+        id: item.id,
+        title: info.title || 'Unknown Title',
+        author: (info.authors || ['Unknown']).join(', '),
+        genre: (info.categories || []).join(', '),
+        pages: info.pageCount || 0,
+        description: info.description || '',
+        isbn: isbn13,
+        publisher: info.publisher || '',
+        coverUrl: getBestCoverUrl(item),
+      };
+      document.getElementById('scanner-book-preview').textContent =
+        `"${scannedBookData.title}" by ${scannedBookData.author}`;
+      document.getElementById('scanner-add-btn').style.display = 'flex';
+    } else {
+      document.getElementById('scanner-book-preview').textContent =
+        'Book not found in database. You can still add it manually.';
+      scannedBookData = { isbn, title: '', author: '', coverUrl: '' };
+      document.getElementById('scanner-add-btn').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('scanner-book-preview').textContent = 'Lookup failed — check your connection.';
+  }
+}
+
+function addScannedBook() {
+  if (!scannedBookData) return;
+  closeScanner();
+  openAddModal(scannedBookData);
+}
+
+function stopCamera() {
+  clearInterval(scannerInterval);
+  if (scannerStream) {
+    scannerStream.getTracks().forEach(t => t.stop());
+    scannerStream = null;
+  }
+}
+
+function closeScanner() {
+  stopCamera();
+  closeModal('scanner-modal');
+}
+
+// ========== END BARCODE SCANNER ==========
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded', () => {
   loadLocal();
@@ -3990,6 +4347,37 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshDashboard();
 });
 </script>
+
+
+<!-- BARCODE SCANNER MODAL -->
+<div class="modal-overlay" id="scanner-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">📷 Scan Book Barcode</div>
+      <button class="modal-close" onclick="closeScanner()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="padding-top:0;">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Point your camera at the ISBN barcode on the back of the book.</p>
+      <div class="scanner-overlay">
+        <video id="scanner-video" autoplay playsinline muted></video>
+        <div class="scanner-frame"><div class="scanner-line"></div></div>
+        <canvas id="scanner-canvas"></canvas>
+      </div>
+      <div class="scanner-status" id="scanner-status">📷 Starting camera...</div>
+      <div id="scanner-result" style="display:none; padding:14px; background:var(--bg-elevated); border-radius:10px; margin-top:12px;">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">ISBN detected:</div>
+        <div style="font-size:16px; font-weight:600; color:var(--accent); letter-spacing:1px;" id="scanner-isbn-display"></div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;" id="scanner-book-preview">Searching...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeScanner()">Cancel</button>
+      <button class="btn btn-primary" id="scanner-add-btn" style="display:none;" onclick="addScannedBook()">Add to Library</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
