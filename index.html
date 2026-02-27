@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <meta name="description" content="ConnieReads - Your personal book tracker"/>
 <meta name="theme-color" content="#1a1612"/>
 <title>ConnieReads</title>
@@ -1588,7 +1588,7 @@ a { color: inherit; text-decoration: none; }
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
   #sidebar { transform: translateX(-100%); }
-  #sidebar.open { transform: translateX(0); }
+  #sidebar.open { transform: translateX(0); position: fixed; z-index: 200; height: 100vh; }
   .sidebar-backdrop.open { display: block; }
   #sidebar-toggle { display: flex; }
   #main { margin-left: 0; }
@@ -1598,14 +1598,50 @@ a { color: inherit; text-decoration: none; }
   .dashboard-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr; }
   .settings-grid { grid-template-columns: 1fr; }
-  .books-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .books-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
   .form-row { grid-template-columns: 1fr; }
+  .filter-panel-grid { grid-template-columns: 1fr 1fr; }
+  .modal-overlay { align-items: flex-end; }
+  .modal { border-radius: 20px 20px 0 0; max-height: 92vh; }
 }
 @media (max-width: 480px) {
-  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat-value { font-size: 24px; }
-  .top-bar-title { font-size: 18px; }
-  .books-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-value { font-size: 22px; }
+  .stat-card { padding: 12px; }
+  .top-bar-title { font-size: 16px; }
+  .books-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .book-cover-lg { height: 100px; }
+  .book-card-title { font-size: 10px; -webkit-line-clamp: 2; }
+  .book-card-author { font-size: 9px; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .goal-card { padding: 16px; }
+  .search-hero { padding: 24px 12px 20px; }
+  .search-hero h2 { font-size: 20px; }
+  .search-results { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .modal { max-width: 100vw !important; border-radius: 20px 20px 0 0 !important; }
+  .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+  .form-row { grid-template-columns: 1fr; }
+  .owned-count-bar { gap: 6px; }
+  .owned-badge { padding: 8px 10px; min-width: 0; flex: 1; }
+  .owned-badge-count { font-size: 18px; }
+  .owned-badge-label { font-size: 10px; }
+  .filter-panel-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .settings-grid { grid-template-columns: 1fr; }
+  .settings-nav { display: flex; flex-wrap: wrap; gap: 4px; border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 16px; margin-bottom: 16px; }
+  .settings-nav-item { padding: 6px 10px; font-size: 12px; }
+  .lib-toolbar { gap: 6px; }
+  .collections-grid { grid-template-columns: 1fr; }
+  .toast-container { bottom: 80px; right: 12px; left: 12px; }
+  .toast { min-width: 0; }
+  .top-bar { gap: 6px; }
+  #scan-btn svg { margin: 0; }
+}
+
+/* Touch-friendly tap targets */
+@media (hover: none) {
+  .filter-chip-sm, .filter-chip, .btn { min-height: 36px; }
+  .tag-chip-remove { padding: 4px 6px; }
+  .star-btn { min-width: 36px; min-height: 36px; }
 }
 
 /* ========== AUTH SCREEN ========== */
@@ -1931,6 +1967,209 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 4px;
 }
 .time-stat-label { font-size: 11px; color: var(--text-muted); }
+
+/* ========== TAGS ========== */
+.tag-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-height: 44px;
+  cursor: text;
+  transition: border-color 0.2s;
+}
+.tag-input-wrap:focus-within { border-color: var(--accent); }
+.tag-chips-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  padding: 2px 10px 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tag-chip-remove {
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.tag-chip-remove:hover { opacity: 1; }
+.tag-text-input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--text-primary);
+  min-width: 140px;
+  flex: 1;
+  padding: 2px 0;
+}
+.tag-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.tag-badge {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ========== LIBRARY FILTER PANEL ========== */
+.lib-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.filter-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  display: none;
+}
+.filter-panel.open { display: block; }
+.filter-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.filter-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.filter-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.filter-chip-sm {
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.filter-chip-sm.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 500;
+}
+.filter-chip-sm:hover { border-color: var(--accent); }
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.sort-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.sort-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+.owned-count-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.owned-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.owned-badge:hover { border-color: var(--accent); }
+.owned-badge.active { background: var(--accent-soft); border-color: var(--accent); }
+.owned-badge-icon { font-size: 18px; }
+.owned-badge-count { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--text-primary); }
+.owned-badge-label { font-size: 11px; color: var(--text-muted); }
+
+/* Fix filter-row for mobile */
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* ========== MOBILE FIXES ========== */
+@media (max-width: 900px) {
+  .top-bar { padding: 10px 14px; gap: 8px; }
+  .filter-panel-grid { grid-template-columns: 1fr 1fr; }
+  .owned-count-bar { gap: 8px; }
+  .owned-badge { padding: 8px 10px; }
+  .filter-row { gap: 6px; }
+  .filter-chip { font-size: 12px; padding: 5px 10px; }
+  .modal { max-height: 95vh; border-radius: 16px 16px 0 0; }
+  .modal-overlay { align-items: flex-end; }
+}
+@media (max-width: 480px) {
+  .page-content { padding: 16px 12px 90px; }
+  .top-bar { padding: 8px 12px; }
+  #add-book-btn span, #scan-btn span { display: none; }
+  .books-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .book-card-title { font-size: 11px; }
+  .book-card-author { font-size: 10px; }
+  .filter-panel-grid { grid-template-columns: 1fr; }
+  .owned-badge-count { font-size: 16px; }
+}
+
+@media (max-width: 380px) {
+  .btn-label { display: none; }
+  #scan-btn, #add-book-btn { padding: 8px 10px !important; }
+}
 </style>
 </head>
 <body>
@@ -2085,7 +2324,7 @@ a { color: inherit; text-decoration: none; }
       <div style="margin-left:auto; display:flex; gap:8px;" id="top-actions">
         <button class="btn btn-secondary" onclick="openScanner()" id="scan-btn" title="Scan barcode" style="padding:8px 12px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="1" width="5" height="5"/><rect x="1" y="9" width="5" height="5"/><rect x="1" y="17" width="5" height="5"/><rect x="9" y="1" width="5" height="22"/><rect x="17" y="1" width="6" height="5"/><rect x="17" y="9" width="6" height="5"/><rect x="17" y="17" width="6" height="5"/></svg>
-          Scan
+          <span class="btn-label">Scan</span>
         </button>
         <button class="btn btn-primary" onclick="openAddModal()" id="add-book-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2223,15 +2462,38 @@ a { color: inherit; text-decoration: none; }
 
       <!-- ===== LIBRARY PAGE ===== -->
       <div class="page" id="page-library">
-        <div class="filter-row">
-          <button class="filter-chip active" id="filter-all" onclick="setStatusFilter('all',this)">All</button>
-          <button class="filter-chip" id="filter-reading" onclick="setStatusFilter('reading',this)">Reading</button>
-          <button class="filter-chip" id="filter-read" onclick="setStatusFilter('read',this)">Read</button>
-          <button class="filter-chip" id="filter-want" onclick="setStatusFilter('want',this)">Want to Read</button>
-          <button class="filter-chip" id="filter-dnf" onclick="setStatusFilter('dnf',this)">DNF</button>
-          <select class="filter-select" onchange="setSortBy(this.value)" style="margin-left:8px;">
+
+        <!-- Owned counts bar -->
+        <div class="owned-count-bar" id="owned-count-bar">
+          <div class="owned-badge" id="ob-all" onclick="setOwnershipFilter('all')" title="All books">
+            <span class="owned-badge-icon">📚</span>
+            <div><div class="owned-badge-count" id="ob-all-count">0</div><div class="owned-badge-label">All Books</div></div>
+          </div>
+          <div class="owned-badge" id="ob-physical" onclick="setOwnershipFilter('physical')" title="Physical copies owned">
+            <span class="owned-badge-icon">📖</span>
+            <div><div class="owned-badge-count" id="ob-physical-count">0</div><div class="owned-badge-label">Physical</div></div>
+          </div>
+          <div class="owned-badge" id="ob-digital" onclick="setOwnershipFilter('digital')" title="Digital copies owned">
+            <span class="owned-badge-icon">💻</span>
+            <div><div class="owned-badge-count" id="ob-digital-count">0</div><div class="owned-badge-label">Digital</div></div>
+          </div>
+          <div class="owned-badge" id="ob-borrowed" onclick="setOwnershipFilter('borrowed')" title="Borrowed books">
+            <span class="owned-badge-icon">🤝</span>
+            <div><div class="owned-badge-count" id="ob-borrowed-count">0</div><div class="owned-badge-label">Borrowed</div></div>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="lib-toolbar">
+          <button class="btn btn-secondary" id="filter-toggle-btn" onclick="toggleFilterPanel()" style="gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filter <span id="filter-badge" style="display:none;" class="filter-badge">0</span>
+          </button>
+          <div style="flex:1;"></div>
+          <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);">Sort:</span>
+          <select class="filter-select" onchange="setSortBy(this.value)" id="sort-select">
             <option value="dateAdded">Date Added</option>
-            <option value="title">Title A-Z</option>
+            <option value="title">Title A–Z</option>
             <option value="author">Author</option>
             <option value="rating">Rating</option>
             <option value="dateRead">Date Read</option>
@@ -2243,6 +2505,56 @@ a { color: inherit; text-decoration: none; }
             <button id="list-view-btn" onclick="setView('list')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
+          </div>
+        </div>
+
+        <!-- Filter panel -->
+        <div class="filter-panel" id="filter-panel">
+          <div class="filter-panel-grid">
+            <div>
+              <div class="filter-group-title">Status</div>
+              <div class="filter-chip-group" id="fp-status">
+                <button class="filter-chip-sm active" data-status="all" onclick="fpSetStatus('all',this)">All</button>
+                <button class="filter-chip-sm" data-status="reading" onclick="fpSetStatus('reading',this)">Reading</button>
+                <button class="filter-chip-sm" data-status="read" onclick="fpSetStatus('read',this)">Read</button>
+                <button class="filter-chip-sm" data-status="want" onclick="fpSetStatus('want',this)">Want to Read</button>
+                <button class="filter-chip-sm" data-status="dnf" onclick="fpSetStatus('dnf',this)">DNF</button>
+              </div>
+            </div>
+            <div>
+              <div class="filter-group-title">Format / Ownership</div>
+              <div class="filter-chip-group" id="fp-ownership">
+                <button class="filter-chip-sm" data-own="physical" onclick="fpToggleOwn('physical',this)">📖 Physical</button>
+                <button class="filter-chip-sm" data-own="digital" onclick="fpToggleOwn('digital',this)">💻 Digital</button>
+                <button class="filter-chip-sm" data-own="borrowed" onclick="fpToggleOwn('borrowed',this)">🤝 Borrowed</button>
+              </div>
+            </div>
+            <div>
+              <div class="filter-group-title">Genre</div>
+              <div class="filter-chip-group" id="fp-genres" style="max-height:80px;overflow-y:auto;"></div>
+            </div>
+            <div>
+              <div class="filter-group-title">Author</div>
+              <div class="filter-chip-group" id="fp-authors" style="max-height:80px;overflow-y:auto;"></div>
+            </div>
+            <div>
+              <div class="filter-group-title">Tags</div>
+              <div class="filter-chip-group" id="fp-tags" style="max-height:80px;overflow-y:auto;"></div>
+            </div>
+            <div>
+              <div class="filter-group-title">Rating</div>
+              <div class="filter-chip-group" id="fp-rating">
+                <button class="filter-chip-sm" data-rating="5" onclick="fpSetRating(5,this)">★★★★★</button>
+                <button class="filter-chip-sm" data-rating="4" onclick="fpSetRating(4,this)">★★★★+</button>
+                <button class="filter-chip-sm" data-rating="3" onclick="fpSetRating(3,this)">★★★+</button>
+                <button class="filter-chip-sm" data-rating="0" onclick="fpSetRating(0,this)">Unrated</button>
+              </div>
+            </div>
+          </div>
+          <div class="sort-row">
+            <span class="sort-label">Active filters:</span>
+            <span id="active-filter-summary" style="font-size:12px;color:var(--text-muted);">None</span>
+            <button class="btn btn-ghost" style="margin-left:auto;font-size:12px;color:var(--red);" onclick="clearAllFilters()">Clear All</button>
           </div>
         </div>
         <div id="library-grid" class="books-grid"></div>
@@ -2600,6 +2912,16 @@ a { color: inherit; text-decoration: none; }
         </div>
       </div>
 
+      <div class="form-group">
+        <label class="form-label">Tags <span style="font-weight:400;color:var(--text-muted);font-size:11px;">(Goodreads shelves or custom labels)</span></label>
+        <div class="tag-input-wrap" id="tag-input-wrap">
+          <div id="tag-chips" class="tag-chips-list"></div>
+          <input type="text" id="f-tags-input" class="tag-text-input" placeholder="Add tag, press Enter..." 
+            onkeydown="handleTagInput(event)" autocomplete="off"/>
+        </div>
+        <input type="hidden" id="f-tags"/>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Reading Status</label>
@@ -2763,6 +3085,8 @@ let currentRating = 0;
 let currentStatusFilter = 'all';
 let currentView = 'grid';
 let currentSortBy = 'dateAdded';
+// Filter panel state
+const fp = { status:'all', ownership:[], genres:[], authors:[], tags:[], rating:-1 };
 let selectedEmoji = '📚';
 let editingBookId = null;
 let lastSearchResults = [];
@@ -3103,6 +3427,7 @@ function openAddModal(prefill = null) {
     document.getElementById('f-isbn').value = prefill.isbn || '';
     document.getElementById('f-pages').value = prefill.pages || '';
     document.getElementById('cover-url-input').value = prefill.coverUrl || '';
+    if (prefill.tags) setTagsInForm(prefill.tags);
     updateCoverPreview();
     updateModalTitle();
     if (prefill.description) {
@@ -3131,6 +3456,7 @@ function openEditModal(bookId) {
   document.getElementById('f-status').value = book.status || 'want';
   document.getElementById('f-date-read').value = book.dateRead || '';
   document.getElementById('f-date-started').value = book.dateStarted || '';
+  setTagsInForm(book.tags || []);
   document.getElementById('f-pages').value = book.pages || '';
   document.getElementById('f-pages-read').value = book.pagesRead || '';
   document.getElementById('f-copies').value = book.copies || '';
@@ -3162,12 +3488,61 @@ function openEditModal(bookId) {
   openModal('book-modal');
 }
 
+
+// ========== TAG INPUT SYSTEM ==========
+function getTagsFromInput() {
+  const hidden = document.getElementById('f-tags');
+  if (!hidden) return [];
+  return hidden.value ? hidden.value.split('|||').filter(Boolean) : [];
+}
+
+function setTagsInForm(tags) {
+  const chips = document.getElementById('tag-chips');
+  const hidden = document.getElementById('f-tags');
+  if (!chips || !hidden) return;
+  hidden.value = tags.join('|||');
+  chips.innerHTML = tags.map(t => tagChipHTML(t)).join('');
+}
+
+function tagChipHTML(tag) {
+  return `<span class="tag-chip">${escHtml(tag)}<span class="tag-chip-remove" onclick="removeTag(${JSON.stringify(tag)})">×</span></span>`;
+}
+
+function handleTagInput(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,$/, '');
+    if (val) addTag(val);
+    e.target.value = '';
+  } else if (e.key === 'Backspace' && e.target.value === '') {
+    const tags = getTagsFromInput();
+    if (tags.length) removeTag(tags[tags.length - 1]);
+  }
+}
+
+function addTag(tag) {
+  const tags = getTagsFromInput();
+  if (!tags.includes(tag)) {
+    tags.push(tag);
+    setTagsInForm(tags);
+  }
+}
+
+function removeTag(tag) {
+  const tags = getTagsFromInput().filter(t => t !== tag);
+  setTagsInForm(tags);
+}
+// ========== END TAG INPUT ==========
+
 function clearBookForm() {
   ['f-title','f-author','f-genre','f-isbn','f-date-read','f-date-started','f-notes','f-copies','f-borrowed-from','cover-url-input','f-pages','f-pages-read'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
   document.getElementById('f-status').value = 'want';
+  document.getElementById('f-tags').value = '';
+  document.getElementById('f-tags-input').value = '';
+  document.getElementById('tag-chips').innerHTML = '';
   document.getElementById('own-physical').checked = false;
   document.getElementById('own-digital').checked = false;
   document.getElementById('own-borrowed').checked = false;
@@ -3257,6 +3632,7 @@ async function saveBook() {
     status: document.getElementById('f-status').value,
     dateRead: document.getElementById('f-date-read').value,
     dateStarted: document.getElementById('f-date-started').value,
+    tags: getTagsFromInput(),
     pages: parseInt(document.getElementById('f-pages').value) || 0,
     pagesRead: parseInt(document.getElementById('f-pages-read').value) || 0,
     rating: currentRating,
@@ -3492,14 +3868,27 @@ function bookCoverImg(book, fallbackSizeClass = '') {
 
 // ---- RENDER BOOK CARD ----
 function renderLibrary() {
-  const filter = ''; // search bar removed - use status filter chips
+  // Build dynamic filter options from current library
+  buildFilterOptions();
+  updateOwnedCounts();
+
   let filtered = books.filter(b => {
-    const matchStatus = currentStatusFilter === 'all' || b.status === currentStatusFilter;
-    const matchFilter = !filter || 
-      b.title.toLowerCase().includes(filter) || 
-      b.author.toLowerCase().includes(filter) ||
-      (b.genre || '').toLowerCase().includes(filter);
-    return matchStatus && matchFilter;
+    // Status
+    if (fp.status !== 'all' && b.status !== fp.status) return false;
+    // Ownership
+    if (fp.ownership.includes('physical') && !b.ownPhysical) return false;
+    if (fp.ownership.includes('digital') && !b.ownDigital) return false;
+    if (fp.ownership.includes('borrowed') && !b.ownBorrowed) return false;
+    // Genre
+    if (fp.genres.length && !fp.genres.includes(b.genre)) return false;
+    // Author
+    if (fp.authors.length && !fp.authors.includes(b.author)) return false;
+    // Tags
+    if (fp.tags.length && !fp.tags.some(t => (b.tags||[]).includes(t))) return false;
+    // Rating
+    if (fp.rating === 0 && b.rating > 0) return false;
+    if (fp.rating > 0 && (b.rating || 0) < fp.rating) return false;
+    return true;
   });
 
   filtered.sort((a, b) => {
@@ -3510,6 +3899,9 @@ function renderLibrary() {
     return (b.dateAdded || 0) - (a.dateAdded || 0);
   });
 
+  // Update active filter summary
+  updateFilterBadge();
+
   const grid = document.getElementById('library-grid');
   const empty = document.getElementById('library-empty');
 
@@ -3517,6 +3909,8 @@ function renderLibrary() {
     grid.innerHTML = '';
     grid.style.display = 'none';
     empty.style.display = 'block';
+    empty.querySelector('h3').textContent = books.length ? 'No books match your filters' : 'Your library is empty';
+    empty.querySelector('p').textContent = books.length ? 'Try clearing some filters.' : 'Search for books in Discover or use the + Add Book button.';
     return;
   }
   grid.style.display = '';
@@ -3531,6 +3925,163 @@ function renderLibrary() {
   }
 }
 
+function buildFilterOptions() {
+  // Genres
+  const genres = [...new Set(books.map(b => b.genre).filter(Boolean))].sort();
+  const fpGenres = document.getElementById('fp-genres');
+  if (fpGenres) {
+    fpGenres.innerHTML = genres.map(g => `
+      <button class="filter-chip-sm ${fp.genres.includes(g)?'active':''}" 
+        onclick="fpToggleGenre(${JSON.stringify(g)},this)">${escHtml(g)}</button>
+    `).join('') || '<span style="font-size:12px;color:var(--text-muted);">No genres yet</span>';
+  }
+  // Authors (top 10 by count)
+  const authorMap = {};
+  books.forEach(b => { if(b.author) authorMap[b.author] = (authorMap[b.author]||0)+1; });
+  const topAuthors = Object.entries(authorMap).sort((a,b)=>b[1]-a[1]).slice(0,12).map(e=>e[0]);
+  const fpAuthors = document.getElementById('fp-authors');
+  if (fpAuthors) {
+    fpAuthors.innerHTML = topAuthors.map(a => `
+      <button class="filter-chip-sm ${fp.authors.includes(a)?'active':''}" 
+        onclick="fpToggleAuthor(${JSON.stringify(a)},this)">${escHtml(a)}</button>
+    `).join('') || '<span style="font-size:12px;color:var(--text-muted);">No authors yet</span>';
+  }
+  // Tags
+  const tagSet = new Set();
+  books.forEach(b => (b.tags||[]).forEach(t => tagSet.add(t)));
+  const allTags = [...tagSet].sort();
+  const fpTags = document.getElementById('fp-tags');
+  if (fpTags) {
+    fpTags.innerHTML = allTags.map(t => `
+      <button class="filter-chip-sm ${fp.tags.includes(t)?'active':''}" 
+        onclick="fpToggleTag(${JSON.stringify(t)},this)">${escHtml(t)}</button>
+    `).join('') || '<span style="font-size:12px;color:var(--text-muted);">No tags yet</span>';
+  }
+}
+
+function updateOwnedCounts() {
+  const allC = document.getElementById('ob-all-count');
+  const physC = document.getElementById('ob-physical-count');
+  const digC = document.getElementById('ob-digital-count');
+  const borC = document.getElementById('ob-borrowed-count');
+  if (allC) allC.textContent = books.length;
+  if (physC) physC.textContent = books.filter(b=>b.ownPhysical).length;
+  if (digC) digC.textContent = books.filter(b=>b.ownDigital).length;
+  if (borC) borC.textContent = books.filter(b=>b.ownBorrowed).length;
+}
+
+function updateFilterBadge() {
+  let count = 0;
+  if (fp.status !== 'all') count++;
+  count += fp.ownership.length;
+  count += fp.genres.length;
+  count += fp.authors.length;
+  count += fp.tags.length;
+  if (fp.rating >= 0) count++;
+
+  const badge = document.getElementById('filter-badge');
+  const btn = document.getElementById('filter-toggle-btn');
+  if (badge) {
+    badge.textContent = count;
+    badge.style.display = count ? 'inline-flex' : 'none';
+  }
+  if (btn) btn.classList.toggle('active', count > 0);
+
+  const summary = document.getElementById('active-filter-summary');
+  if (summary) {
+    if (count === 0) { summary.textContent = 'None'; return; }
+    const parts = [];
+    if (fp.status !== 'all') parts.push('Status: ' + fp.status);
+    if (fp.ownership.length) parts.push('Format: ' + fp.ownership.join(', '));
+    if (fp.genres.length) parts.push('Genre: ' + fp.genres.join(', '));
+    if (fp.authors.length) parts.push('Author: ' + fp.authors.slice(0,2).join(', ') + (fp.authors.length>2?'…':''));
+    if (fp.tags.length) parts.push('Tags: ' + fp.tags.join(', '));
+    if (fp.rating === 0) parts.push('Unrated');
+    else if (fp.rating > 0) parts.push(fp.rating+'★+');
+    summary.textContent = parts.join(' · ');
+  }
+}
+
+// Filter panel actions
+function toggleFilterPanel() {
+  const panel = document.getElementById('filter-panel');
+  panel.classList.toggle('open');
+}
+
+function fpSetStatus(status, el) {
+  fp.status = status;
+  document.querySelectorAll('#fp-status .filter-chip-sm').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderLibrary();
+}
+
+function fpToggleOwn(own, el) {
+  const idx = fp.ownership.indexOf(own);
+  if (idx >= 0) fp.ownership.splice(idx, 1);
+  else fp.ownership.push(own);
+  el.classList.toggle('active', fp.ownership.includes(own));
+  renderLibrary();
+}
+
+function setOwnershipFilter(own) {
+  // Quick filter from owned count bar
+  if (own === 'all') { fp.ownership = []; }
+  else {
+    const has = fp.ownership.includes(own);
+    fp.ownership = has ? [] : [own];
+  }
+  // Update filter panel chips if open
+  document.querySelectorAll('#fp-ownership .filter-chip-sm').forEach(b => {
+    b.classList.toggle('active', fp.ownership.includes(b.dataset.own));
+  });
+  // Update owned bar active states
+  document.querySelectorAll('.owned-badge').forEach(b => b.classList.remove('active'));
+  const target = document.getElementById('ob-' + own);
+  if (target) target.classList.add('active');
+  if (own === 'all') document.getElementById('ob-all')?.classList.add('active');
+  renderLibrary();
+}
+
+function fpToggleGenre(genre, el) {
+  const idx = fp.genres.indexOf(genre);
+  if (idx >= 0) fp.genres.splice(idx, 1);
+  else fp.genres.push(genre);
+  el.classList.toggle('active', fp.genres.includes(genre));
+  renderLibrary();
+}
+
+function fpToggleAuthor(author, el) {
+  const idx = fp.authors.indexOf(author);
+  if (idx >= 0) fp.authors.splice(idx, 1);
+  else fp.authors.push(author);
+  el.classList.toggle('active', fp.authors.includes(author));
+  renderLibrary();
+}
+
+function fpToggleTag(tag, el) {
+  const idx = fp.tags.indexOf(tag);
+  if (idx >= 0) fp.tags.splice(idx, 1);
+  else fp.tags.push(tag);
+  el.classList.toggle('active', fp.tags.includes(tag));
+  renderLibrary();
+}
+
+function fpSetRating(rating, el) {
+  fp.rating = fp.rating === rating ? -1 : rating;
+  document.querySelectorAll('#fp-rating .filter-chip-sm').forEach(b => b.classList.remove('active'));
+  if (fp.rating >= 0) el.classList.add('active');
+  renderLibrary();
+}
+
+function clearAllFilters() {
+  fp.status = 'all'; fp.ownership = []; fp.genres = []; fp.authors = []; fp.tags = []; fp.rating = -1;
+  document.querySelectorAll('#filter-panel .filter-chip-sm').forEach(b => b.classList.remove('active'));
+  document.querySelector('#fp-status [data-status="all"]')?.classList.add('active');
+  document.querySelectorAll('.owned-badge').forEach(b => b.classList.remove('active'));
+  document.getElementById('ob-all')?.classList.add('active');
+  renderLibrary();
+}
+
 function renderBookCard(book, i) {
   const stars = book.rating ? '★'.repeat(book.rating) : '';
   const ownerBadge = book.ownBorrowed 
@@ -3543,9 +4094,10 @@ function renderBookCard(book, i) {
       <div class="book-card-title">${escHtml(book.title)}</div>
       <div class="book-card-author">${escHtml(book.author)}</div>
       <div class="book-card-meta">
-        <span class="status-badge status-${book.status}">${statusLabel(book.status)}</span>
-        ${stars ? `<span class="stars-small">${stars}</span>` : ''}
+        <span class="status-badge status-\${book.status}">\${statusLabel(book.status)}</span>
+        \${stars ? `<span class="stars-small">\${stars}</span>` : ''}
       </div>
+      \${(book.tags||[]).length ? `<div class="tag-display" style="margin-top:4px;">\${(book.tags).slice(0,2).map(t=>`<span class="tag-badge">\${escHtml(t)}</span>`).join('')}</div>` : ''}
     </div>
   `;
 }
@@ -3566,6 +4118,7 @@ function renderBookListItem(book, i) {
         <div class="book-list-badges">
           <span class="status-badge status-${book.status}">${statusLabel(book.status)}</span>
           ${ownTags}
+          ${(book.tags||[]).slice(0,3).map(t=>`<span class="tag-badge">${escHtml(t)}</span>`).join('')}
         </div>
       </div>
       <div class="book-list-meta">
@@ -3578,12 +4131,7 @@ function renderBookListItem(book, i) {
 }
 
 function filterLibrary() { renderLibrary(); } // filter via status chips + sort
-function setStatusFilter(status, el) {
-  currentStatusFilter = status;
-  document.querySelectorAll('#page-library .filter-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  renderLibrary();
-}
+// setStatusFilter replaced by fpSetStatus
 function setSortBy(val) { currentSortBy = val; renderLibrary(); }
 function setView(view) {
   currentView = view;
@@ -3632,6 +4180,7 @@ function openBookDetail(bookId) {
     ${ownDetails ? `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">${ownDetails}</div>` : ''}
     ${colNames ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Collections: ${colNames}</div>` : ''}
     ${dateLine ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${dateLine}</div>` : ''}
+    ${(book.tags||[]).length ? `<div style="margin-bottom:12px;"><span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Tags</span><div class="tag-display" style="margin-top:5px;">${book.tags.map(t=>`<span class="tag-badge">${escHtml(t)}</span>`).join('')}</div></div>` : ''}
     ${book.description ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;padding:14px;background:var(--bg-elevated);border-radius:9px;">${escHtml(book.description.substring(0,400))}${book.description.length > 400 ? '...' : ''}</div>` : ''}
     ${book.notes ? `<div style="margin-top:16px;"><div style="font-size:12px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Notes & Review</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;padding:14px;background:var(--bg-elevated);border-radius:9px;">${escHtml(book.notes)}</div></div>` : ''}
   `;
@@ -4047,15 +4596,20 @@ function importGoodreads(event) {
         const author = row['Author'] || row['author'] || row['Author l-f'];
         if (!title) return;
         const statusMap = { 'read': 'read', 'currently-reading': 'reading', 'to-read': 'want' };
-        const grShelf = (row['Exclusive Shelf'] || row['Bookshelves'] || 'to-read').toLowerCase();
+        const grShelf = (row['Exclusive Shelf'] || 'to-read').toLowerCase();
         const status = statusMap[grShelf] || 'want';
         const rating = parseInt(row['My Rating'] || row['rating']) || 0;
+        // Goodreads shelves → tags (not genre)
+        const rawShelves = row['Bookshelves'] || row['Bookshelves with positions'] || '';
+        const grTags = rawShelves.split(',').map(s => s.trim())
+          .filter(s => s && !['read','currently-reading','to-read'].includes(s.toLowerCase()));
         if (!books.find(b => b.title.toLowerCase() === title.toLowerCase())) {
           const book = {
             id: genId(),
             title: title.trim(),
             author: (author || 'Unknown').replace(/,\s*(\w+)\s*$/, ' $1').trim(),
-            genre: row['Bookshelves'] || '',
+            genre: '',
+            tags: grTags,
             status, rating,
             dateRead: row['Date Read'] || '',
             pages: parseInt(row['Number of Pages'] || row['pages']) || 0,
@@ -4200,16 +4754,18 @@ function parseCSV(text) {
 
 // ========== BARCODE SCANNER ==========
 let scannerStream = null;
-let scannerInterval = null;
+let scannerAnimFrame = null;
 let scannedBookData = null;
-let jsQRLoaded = false;
+let zxingReader = null;
+let zxingLoaded = false;
 
-async function loadJsQR() {
-  if (jsQRLoaded) return true;
+async function loadZXing() {
+  if (zxingLoaded && window.ZXing) return true;
   return new Promise(resolve => {
     const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
-    s.onload = () => { jsQRLoaded = true; resolve(true); };
+    // ZXing-js: reads EAN-13 (ISBN barcodes) and QR codes
+    s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js';
+    s.onload = () => { zxingLoaded = true; resolve(true); };
     s.onerror = () => resolve(false);
     document.head.appendChild(s);
   });
@@ -4217,61 +4773,59 @@ async function loadJsQR() {
 
 async function openScanner() {
   openModal('scanner-modal');
-  document.getElementById('scanner-status').textContent = '📷 Loading scanner...';
-  document.getElementById('scanner-result').style.display = 'none';
-  document.getElementById('scanner-add-btn').style.display = 'none';
+  const statusEl = document.getElementById('scanner-status');
+  const resultEl = document.getElementById('scanner-result');
+  const addBtn = document.getElementById('scanner-add-btn');
+  statusEl.textContent = '📷 Loading barcode reader...';
+  resultEl.style.display = 'none';
+  addBtn.style.display = 'none';
   scannedBookData = null;
 
-  const libLoaded = await loadJsQR();
-  if (!libLoaded) {
-    document.getElementById('scanner-status').textContent = '❌ Could not load barcode library. Check your connection.';
+  const loaded = await loadZXing();
+  if (!loaded || !window.ZXing) {
+    statusEl.textContent = '❌ Could not load barcode library. Check your connection.';
     return;
   }
 
   try {
-    scannerStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
+    // ZXing browser multi-format reader - handles EAN-13 (ISBN barcodes)
+    zxingReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('scanner-video');
-    video.srcObject = scannerStream;
-    await video.play();
-    document.getElementById('scanner-status').textContent = '🔍 Scanning for barcode...';
-    startScanning();
+
+    // Get rear camera on mobile
+    const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+    const rearCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
+    const deviceId = rearCam?.deviceId;
+
+    statusEl.textContent = '🔍 Point camera at the ISBN barcode on the book's back cover...';
+
+    await zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
+      if (result) {
+        const text = result.getText();
+        // Accept EAN-13 (978/979 prefix = book ISBN), EAN-10, or pure numeric 13-digit
+        const clean = text.replace(/[^0-9X]/gi, '');
+        if (clean.length === 13 || clean.length === 10) {
+          handleISBNDetected(clean);
+        }
+      }
+      // Ignore DecodeHintType errors - they're normal during scanning
+    });
+
+    scannerStream = { stop: () => zxingReader.reset() };
+
   } catch(e) {
-    if (e.name === 'NotAllowedError') {
-      document.getElementById('scanner-status').textContent = '🚫 Camera access denied. Please allow camera permissions and try again.';
+    console.error('Scanner error:', e);
+    if (e.name === 'NotAllowedError' || e.message?.includes('Permission')) {
+      statusEl.textContent = '🚫 Camera access denied. Please allow camera in your browser settings.';
+    } else if (e.name === 'NotFoundError') {
+      statusEl.textContent = '📷 No camera found. Please use a device with a camera.';
     } else {
-      document.getElementById('scanner-status').textContent = '❌ Could not access camera: ' + e.message;
+      statusEl.textContent = '❌ Camera error: ' + (e.message || 'Unknown error');
     }
   }
 }
 
-function startScanning() {
-  const video = document.getElementById('scanner-video');
-  const canvas = document.getElementById('scanner-canvas');
-  const ctx = canvas.getContext('2d');
-
-  scannerInterval = setInterval(() => {
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    // Try jsQR for QR/barcodes
-    if (window.jsQR) {
-      const code = jsQR(imageData.data, imageData.width, imageData.height);
-      if (code && code.data) {
-        // Check if it looks like an ISBN (numeric, 10 or 13 digits)
-        const clean = code.data.replace(/[^0-9X]/gi, '');
-        if (clean.length === 13 || clean.length === 10) {
-          handleISBNDetected(clean);
-          return;
-        }
-      }
-    }
-  }, 300);
-}
+function startScanning() { /* handled by ZXing decode loop */ }
 
 async function handleISBNDetected(isbn) {
   clearInterval(scannerInterval);
@@ -4321,11 +4875,12 @@ function addScannedBook() {
 }
 
 function stopCamera() {
-  clearInterval(scannerInterval);
-  if (scannerStream) {
+  cancelAnimationFrame(scannerAnimFrame);
+  if (zxingReader) { try { zxingReader.reset(); } catch(e){} zxingReader = null; }
+  if (scannerStream && scannerStream.getTracks) {
     scannerStream.getTracks().forEach(t => t.stop());
-    scannerStream = null;
   }
+  scannerStream = null;
 }
 
 function closeScanner() {
