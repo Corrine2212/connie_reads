@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="description" content="Shelfwise - Your personal book tracker"/>
+<meta name="description" content="ConnieReads - Your personal book tracker"/>
 <meta name="theme-color" content="#1a1612"/>
-<title>Connie Reads</title>
+<title>ConnieReads</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -1693,6 +1693,131 @@ a { color: inherit; text-decoration: none; }
   flex-shrink: 0;
 }
 .signout-btn:hover { color: var(--red); border-color: var(--red); }
+
+/* ========== BOOK SPINE PLACEHOLDER ========== */
+.book-spine {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  position: relative;
+  overflow: hidden;
+}
+.book-spine::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 6px;
+  background: rgba(0,0,0,0.25);
+}
+.book-spine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%, rgba(0,0,0,0.15) 100%);
+}
+.book-spine-title {
+  font-family: 'Lora', serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.95);
+  text-align: center;
+  line-height: 1.3;
+  word-break: break-word;
+  z-index: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.book-spine-author {
+  font-size: 8px;
+  color: rgba(255,255,255,0.7);
+  text-align: center;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ========== LEADERBOARD STATS ========== */
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  margin-bottom: 6px;
+  transition: background 0.12s;
+}
+.leaderboard-item:hover { background: var(--bg-card); }
+.leaderboard-rank {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.lb-medal-1 { color: #f5c842; }
+.lb-medal-2 { color: #b0b8c1; }
+.lb-medal-3 { color: #cd7f32; }
+.lb-medal-n { color: var(--text-muted); font-size: 15px; }
+.leaderboard-cover {
+  width: 36px; height: 54px;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+.leaderboard-cover img { width: 100%; height: 100%; object-fit: cover; }
+.leaderboard-info { flex: 1; min-width: 0; }
+.leaderboard-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.leaderboard-sub { font-size: 11px; color: var(--text-muted); }
+.leaderboard-score {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--star);
+  flex-shrink: 0;
+}
+.stats-full-width { grid-column: 1 / -1; }
+.reading-time-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.time-stat-box {
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+.time-stat-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.time-stat-label { font-size: 11px; color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -1708,7 +1833,7 @@ a { color: inherit; text-decoration: none; }
           <path d="M9 7h7M9 10h5" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="auth-logo-name">Shelf<span>wise</span></div>
+      <div class="auth-logo-name">Connie<span>Reads</span></div>
       <div class="auth-logo-sub">Your personal reading library</div>
     </div>
 
@@ -1781,7 +1906,7 @@ a { color: inherit; text-decoration: none; }
           <path d="M9 7h7M9 10h5" stroke-linecap="round"/>
         </svg>
       </div>
-      <span class="logo-text">Shelf<span>wise</span></span>
+      <span class="logo-text">Connie<span>Reads</span></span>
     </div>
 
     <div class="sidebar-section-label">Navigation</div>
@@ -2060,6 +2185,26 @@ a { color: inherit; text-decoration: none; }
             <div class="stats-card-title">⭐ Rating Distribution</div>
             <div class="bar-chart" id="rating-chart"></div>
           </div>
+          <div class="stats-card stats-full-width">
+            <div class="stats-card-title">🥇 Best Rated Books</div>
+            <div id="best-rated-list"></div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-card-title">📖 Most Read Authors</div>
+            <div id="most-read-authors-list"></div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-card-title">📊 Reading Summary</div>
+            <div class="reading-time-stats" id="reading-summary"></div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-card-title">📚 Format Breakdown</div>
+            <div class="bar-chart" id="format-chart"></div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-card-title">🗓️ Monthly Reading</div>
+            <div class="year-chart" id="monthly-chart" style="height:100px;"></div>
+          </div>
         </div>
       </div>
 
@@ -2073,6 +2218,10 @@ a { color: inherit; text-decoration: none; }
             <div class="settings-nav-item active" onclick="showSettingsPanel('appearance', this)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 8a4 4 0 0 1 0 8"/></svg>
               Appearance
+            </div>
+            <div class="settings-nav-item" onclick="showSettingsPanel('profile', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Profile
             </div>
             <div class="settings-nav-item" onclick="showSettingsPanel('goals', this)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
@@ -2103,6 +2252,25 @@ a { color: inherit; text-decoration: none; }
               </div>
             </div>
 
+            <!-- PROFILE -->
+            <div class="settings-panel" id="sp-profile">
+              <div class="settings-section">
+                <h3>Profile</h3>
+                <div class="form-group">
+                  <label class="form-label">Display Name</label>
+                  <div style="display:flex; gap:10px;">
+                    <input type="text" class="form-input" id="profile-display-name" placeholder="Your name"/>
+                    <button class="btn btn-primary" onclick="saveDisplayName()">Save</button>
+                  </div>
+                  <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">This name appears in the sidebar and dashboard greeting.</div>
+                </div>
+                <div class="form-group" style="margin-top:16px;">
+                  <label class="form-label">Email</label>
+                  <div style="font-size:14px; color:var(--text-secondary); padding: 10px 14px; background:var(--bg-elevated); border-radius:9px; border:1px solid var(--border);" id="profile-email">—</div>
+                </div>
+              </div>
+            </div>
+
             <!-- GOALS -->
             <div class="settings-panel" id="sp-goals">
               <div class="settings-section">
@@ -2125,7 +2293,7 @@ a { color: inherit; text-decoration: none; }
             <div class="settings-panel" id="sp-data">
               <div class="settings-section">
                 <h3>Import Data</h3>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Import your reading history from Goodreads (CSV export) or a Shelfwise backup.</p>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Import your reading history from Goodreads (CSV export) or a ConnieReads backup.</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                   <label class="btn btn-secondary" style="cursor:pointer;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -2134,14 +2302,14 @@ a { color: inherit; text-decoration: none; }
                   </label>
                   <label class="btn btn-secondary" style="cursor:pointer;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Import Shelfwise JSON
+                    Import ConnieReads JSON
                     <input type="file" accept=".json" style="display:none;" onchange="importShelfwise(event)"/>
                   </label>
                 </div>
               </div>
               <div class="settings-section">
                 <h3>Export Data</h3>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Download a backup of your entire Connie Reads library.</p>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Download a backup of your entire ConnieReads library.</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                   <button class="btn btn-secondary" onclick="exportData('json')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -2167,11 +2335,11 @@ a { color: inherit; text-decoration: none; }
                   <div style="width:64px; height:64px; background:var(--accent); border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="32" height="32"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 10h5" stroke-linecap="round"/></svg>
                   </div>
-                  <div style="font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--text-primary);">Connie Reads</div>
-                  <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Version 1.0.0</div>
+                  <div style="font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--text-primary);">ConnieReads</div>
+                  <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Version 1.1.0</div>
                 </div>
                 <p style="font-size:14px; color:var(--text-secondary); max-width:400px; margin:0 auto 20px; line-height:1.6;">Your personal book tracker. Track your reading, discover new books, and organise your library your way.</p>
-                <div style="font-size:12px; color:var(--text-muted);">Built with ❤️ for readers everywhere</div>
+                <div style="font-size:12px; color:var(--text-muted);">Built with ❤️ for Connie</div>
               </div>
             </div>
           </div>
@@ -2281,20 +2449,28 @@ a { color: inherit; text-decoration: none; }
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Date Read</label>
-          <input type="date" class="form-input" id="f-date-read"/>
+          <label class="form-label">Date Started</label>
+          <input type="date" class="form-input" id="f-date-started"/>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
+          <label class="form-label">Date Read / Finished</label>
+          <input type="date" class="form-input" id="f-date-read"/>
+        </div>
+        <div class="form-group">
           <label class="form-label">Pages</label>
           <input type="number" class="form-input" id="f-pages" placeholder="0"/>
         </div>
+      </div>
+
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">Pages Read</label>
           <input type="number" class="form-input" id="f-pages-read" placeholder="0"/>
         </div>
+        <div class="form-group"></div>
       </div>
 
       <div class="form-group">
@@ -2610,7 +2786,7 @@ async function authForgotPassword() {
 }
 
 async function authSignOut() {
-  if (!confirm('Sign out of Connie Reads?')) return;
+  if (!confirm('Sign out of ConnieReads?')) return;
   if (unsubscribeBooks) unsubscribeBooks();
   if (unsubscribeCollections) unsubscribeCollections();
   books = []; collections = [];
@@ -2778,6 +2954,7 @@ function openEditModal(bookId) {
   document.getElementById('f-isbn').value = book.isbn || '';
   document.getElementById('f-status').value = book.status || 'want';
   document.getElementById('f-date-read').value = book.dateRead || '';
+  document.getElementById('f-date-started').value = book.dateStarted || '';
   document.getElementById('f-pages').value = book.pages || '';
   document.getElementById('f-pages-read').value = book.pagesRead || '';
   document.getElementById('f-copies').value = book.copies || '';
@@ -2810,7 +2987,7 @@ function openEditModal(bookId) {
 }
 
 function clearBookForm() {
-  ['f-title','f-author','f-genre','f-isbn','f-date-read','f-notes','f-copies','f-borrowed-from','cover-url-input','f-pages','f-pages-read'].forEach(id => {
+  ['f-title','f-author','f-genre','f-isbn','f-date-read','f-date-started','f-notes','f-copies','f-borrowed-from','cover-url-input','f-pages','f-pages-read'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -2835,13 +3012,21 @@ function updateModalTitle() {
     document.getElementById('modal-book-title-display').textContent = title;
     document.getElementById('modal-book-author-display').textContent = author;
   }
+  // Refresh spine preview live as user types title
+  const url = document.getElementById('cover-url-input').value.trim();
+  if (!url && (title || author)) updateCoverPreview();
 }
 
 function updateCoverPreview() {
   const url = document.getElementById('cover-url-input').value.trim();
+  const title = document.getElementById('f-title').value.trim();
+  const author = document.getElementById('f-author').value.trim();
   const preview = document.getElementById('modal-cover-preview');
   if (url) {
-    preview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='📚'" style="width:100%;height:100%;object-fit:cover;"/>`;
+    const fakeBook = { title, author, coverUrl: url };
+    preview.innerHTML = bookCoverImg(fakeBook, 'spine-lg');
+  } else if (title) {
+    preview.innerHTML = bookSpineHTML({ title, author }, 'spine-lg');
   } else {
     preview.innerHTML = '📚';
   }
@@ -2895,6 +3080,7 @@ async function saveBook() {
     isbn: document.getElementById('f-isbn').value.trim(),
     status: document.getElementById('f-status').value,
     dateRead: document.getElementById('f-date-read').value,
+    dateStarted: document.getElementById('f-date-started').value,
     pages: parseInt(document.getElementById('f-pages').value) || 0,
     pagesRead: parseInt(document.getElementById('f-pages-read').value) || 0,
     rating: currentRating,
@@ -2936,7 +3122,7 @@ async function deleteCurrentBook() {
   showToast(`"${book.title}" deleted`, 'info');
 }
 
-// ---- COVER REFRESH ----
+// ---- COVER SEARCH (Google Books + Open Library + Hardcover) ----
 async function refreshCover() {
   const title = document.getElementById('f-title').value.trim();
   const author = document.getElementById('f-author').value.trim();
@@ -2948,16 +3134,53 @@ async function refreshCover() {
   coverRefreshAttempts[key] = (coverRefreshAttempts[key] || 0) + 1;
 
   const sources = [
-    isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null,
+    // Google Books
     `https://books.google.com/books/content?q=${encodeURIComponent(title + ' ' + author)}&img=1&zoom=1&size=large`,
-    isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg` : null,
+    // Open Library ISBN
+    isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null,
+    // Open Library title
     `https://covers.openlibrary.org/b/title/${encodeURIComponent(title)}-L.jpg`,
+    // Open Library ISBN medium
+    isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg` : null,
+    // Hardcover (via Open Library fallback path)
+    isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false` : null,
   ].filter(Boolean);
 
   const source = sources[coverRefreshAttempts[key] % sources.length];
   document.getElementById('cover-url-input').value = source;
   updateCoverPreview();
-  showToast('Cover updated! Check the preview.', 'success');
+  showToast(`Trying source ${(coverRefreshAttempts[key] % sources.length) + 1}/${sources.length} — check preview!`, 'success');
+}
+
+// Try to auto-fetch best cover from Hardcover API (GraphQL) then fall back to Google Books
+async function fetchBestCover(title, author, isbn) {
+  // Try Hardcover GraphQL first
+  try {
+    const hcQuery = `{"query":"query { books(where: {title: {_ilike: \\"${title.replace(/"/g, '')}\\"}} limit: 1) { image { url } } }"}`;
+    const hcRes = await fetch('https://api.hardcover.app/v1/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: hcQuery
+    });
+    if (hcRes.ok) {
+      const hcData = await hcRes.json();
+      const url = hcData?.data?.books?.[0]?.image?.url;
+      if (url) return url;
+    }
+  } catch(e) { /* fall through */ }
+
+  // Fall back to Google Books
+  try {
+    const q = isbn ? `isbn:${isbn}` : encodeURIComponent(`${title} ${author}`);
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`);
+    const data = await res.json();
+    const imgLinks = data.items?.[0]?.volumeInfo?.imageLinks;
+    if (imgLinks) {
+      return (imgLinks.extraLarge || imgLinks.large || imgLinks.thumbnail || '').replace('http:', 'https:');
+    }
+  } catch(e) {}
+
+  return '';
 }
 
 // ---- GOOGLE BOOKS SEARCH ----
@@ -3002,11 +3225,12 @@ function renderSearchResults(results) {
   }
   grid.innerHTML = results.map((book, i) => {
     const inLib = books.some(b => b.isbn === book.isbn || b.title.toLowerCase() === book.title.toLowerCase());
+    const coverHtml = book.coverUrl 
+      ? `<img src="${book.coverUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="${escHtml(book.title)}"/><div style="display:none;width:100%;height:100%;">${bookSpineHTML(book)}</div>`
+      : bookSpineHTML(book);
     return `
       <div class="search-result-card" style="animation-delay:${i * 0.04}s">
-        <div class="search-cover">
-          ${book.coverUrl ? `<img src="${book.coverUrl}" onerror="this.parentElement.innerHTML='📚'" alt="${escHtml(book.title)}"/>` : '📚'}
-        </div>
+        <div class="search-cover">${coverHtml}</div>
         <div class="search-book-title">${escHtml(book.title)}</div>
         <div class="search-book-author">${escHtml(book.author)}</div>
         <button class="search-add-btn ${inLib ? 'added' : ''}" onclick="addFromSearch(${i})">
@@ -3022,7 +3246,36 @@ function addFromSearch(index) {
   openAddModal(book);
 }
 
-// ---- LIBRARY ----
+// ---- BOOK SPINE PLACEHOLDER GENERATOR ----
+const SPINE_COLORS = [
+  ['#7c3f1e','#a0552a'],['#1e3a5f','#2a5080'],['#2d5a1b','#3d7a26'],
+  ['#5a1e3f','#7a2a55'],['#3f3f1e','#5a5a2a'],['#1e4a4a','#2a6a6a'],
+  ['#5a2d1e','#7a3f2a'],['#1e1e5a','#2a2a7a'],['#4a1e5a','#6a2a7a'],
+  ['#5a1e1e','#7a2a2a'],['#1e5a3a','#2a7a50'],['#3a1e5a','#502a7a'],
+];
+
+function getSpineColor(title) {
+  let hash = 0;
+  for (let i = 0; i < (title||'').length; i++) hash = ((hash << 5) - hash) + title.charCodeAt(i);
+  return SPINE_COLORS[Math.abs(hash) % SPINE_COLORS.length];
+}
+
+function bookSpineHTML(book, sizeClass = '') {
+  const [bg1, bg2] = getSpineColor(book.title || '');
+  return `<div class="book-spine ${sizeClass}" style="background:linear-gradient(135deg, ${bg1}, ${bg2});">
+    <div class="book-spine-title">${escHtml(book.title || '')}</div>
+    <div class="book-spine-author">${escHtml(book.author || '')}</div>
+  </div>`;
+}
+
+function bookCoverImg(book, fallbackSizeClass = '') {
+  if (book.coverUrl) {
+    return `<img src="${escHtml(book.coverUrl)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="${escHtml(book.title)}"/><div style="display:none;width:100%;height:100%;">${bookSpineHTML(book, fallbackSizeClass)}</div>`;
+  }
+  return bookSpineHTML(book, fallbackSizeClass);
+}
+
+// ---- RENDER BOOK CARD ----
 function renderLibrary() {
   const filter = (document.getElementById('lib-filter')?.value || '').toLowerCase();
   let filtered = books.filter(b => {
@@ -3065,16 +3318,13 @@ function renderLibrary() {
 
 function renderBookCard(book, i) {
   const stars = book.rating ? '★'.repeat(book.rating) : '';
-  const cover = book.coverUrl 
-    ? `<img src="${book.coverUrl}" onerror="this.parentElement.innerHTML='📚'" alt="${escHtml(book.title)}"/>`
-    : '📚';
   const ownerBadge = book.ownBorrowed 
     ? `<div class="cover-badge borrowed">B</div>` 
     : (book.ownPhysical || book.ownDigital) 
       ? `<div class="cover-badge owned">✓</div>` : '';
   return `
     <div class="book-card" onclick="openBookDetail('${book.id}')" style="animation-delay:${i*0.03}s">
-      <div class="book-cover-lg">${cover}${ownerBadge}</div>
+      <div class="book-cover-lg">${bookCoverImg(book)}${ownerBadge}</div>
       <div class="book-card-title">${escHtml(book.title)}</div>
       <div class="book-card-author">${escHtml(book.author)}</div>
       <div class="book-card-meta">
@@ -3086,9 +3336,6 @@ function renderBookCard(book, i) {
 }
 
 function renderBookListItem(book, i) {
-  const cover = book.coverUrl 
-    ? `<img src="${book.coverUrl}" onerror="this.parentElement.innerHTML='📚'" alt=""/>` 
-    : '📚';
   const stars = book.rating ? '★'.repeat(book.rating) : '';
   const ownTags = [
     book.ownPhysical && '<span class="status-badge" style="background:var(--green-soft);color:var(--green);">📖 Physical</span>',
@@ -3097,7 +3344,7 @@ function renderBookListItem(book, i) {
   ].filter(Boolean).join('');
   return `
     <div class="book-list-item" onclick="openBookDetail('${book.id}')">
-      <div class="book-list-cover">${cover}</div>
+      <div class="book-list-cover">${bookCoverImg(book)}</div>
       <div class="book-list-info">
         <div class="book-list-title">${escHtml(book.title)}</div>
         <div class="book-list-author">${escHtml(book.author)}${book.genre ? ` · ${escHtml(book.genre)}` : ''}</div>
@@ -3134,9 +3381,7 @@ function setView(view) {
 function openBookDetail(bookId) {
   const book = books.find(b => b.id === bookId);
   if (!book) return;
-  const cover = book.coverUrl 
-    ? `<img src="${book.coverUrl}" onerror="this.parentElement.innerHTML='📚'" style="width:100%;height:100%;object-fit:cover;" alt=""/>` 
-    : '📚';
+  const coverHtml = bookCoverImg(book, 'spine-lg');
   const stars = book.rating ? '★'.repeat(book.rating) + '☆'.repeat(5-book.rating) : '☆☆☆☆☆';
   const progress = book.pages && book.pagesRead ? Math.round((book.pagesRead / book.pages) * 100) : 0;
   const ownDetails = [
@@ -3149,9 +3394,14 @@ function openBookDetail(bookId) {
     return col ? `${col.emoji} ${col.name}` : null;
   }).filter(Boolean).join(', ');
 
+  const dateLine = [
+    book.dateStarted && `📅 Started: ${book.dateStarted}`,
+    book.dateRead && `✅ Finished: ${book.dateRead}`,
+  ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+
   document.getElementById('book-detail-body').innerHTML = `
     <div style="display:flex; gap:22px; margin-bottom:24px;">
-      <div style="width:100px;height:150px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:4px 4px 16px rgba(0,0,0,0.35);">${cover}</div>
+      <div style="width:100px;height:150px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-elevated);box-shadow:4px 4px 16px rgba(0,0,0,0.35);">${coverHtml}</div>
       <div>
         <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">${escHtml(book.title)}</div>
         <div style="font-family:'Lora',serif;font-size:14px;font-style:italic;color:var(--text-secondary);margin-bottom:10px;">${escHtml(book.author)}</div>
@@ -3166,7 +3416,7 @@ function openBookDetail(bookId) {
     </div>
     ${ownDetails ? `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">${ownDetails}</div>` : ''}
     ${colNames ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Collections: ${colNames}</div>` : ''}
-    ${book.dateRead ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">📅 Read on ${book.dateRead}</div>` : ''}
+    ${dateLine ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${dateLine}</div>` : ''}
     ${book.description ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;padding:14px;background:var(--bg-elevated);border-radius:9px;">${escHtml(book.description.substring(0,400))}${book.description.length > 400 ? '...' : ''}</div>` : ''}
     ${book.notes ? `<div style="margin-top:16px;"><div style="font-size:12px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Notes & Review</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;padding:14px;background:var(--bg-elevated);border-radius:9px;">${escHtml(book.notes)}</div></div>` : ''}
   `;
@@ -3204,7 +3454,7 @@ function renderCollections() {
   grid.innerHTML = collections.map(col => {
     const colBooks = books.filter(b => (b.collections || []).includes(col.id));
     const coverPreviews = colBooks.slice(0, 4).map(b => `
-      <div class="collection-cover-mini">${b.coverUrl ? `<img src="${b.coverUrl}" onerror="this.innerHTML='📚'" alt=""/>` : '📚'}</div>
+      <div class="collection-cover-mini">${b.coverUrl ? `<img src="${b.coverUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" alt=""/><div style="display:none;width:100%;height:100%;">${bookSpineHTML(b)}</div>` : bookSpineHTML(b)}</div>
     `).join('');
     const more = colBooks.length > 4 ? `<div class="collection-more">+${colBooks.length - 4}</div>` : '';
     return `
@@ -3269,9 +3519,7 @@ function refreshDashboard() {
   if (reading.length) {
     crList.innerHTML = reading.map(book => {
       const progress = book.pages && book.pagesRead ? Math.round((book.pagesRead / book.pages) * 100) : 0;
-      const cover = book.coverUrl 
-        ? `<div class="book-cover-sm"><img src="${book.coverUrl}" onerror="this.parentElement.innerHTML='📚'" alt=""/></div>`
-        : `<div class="book-cover-sm">📚</div>`;
+      const cover = `<div class="book-cover-sm">${bookCoverImg(book)}</div>`;
       return `
         <div class="book-item-horizontal" onclick="openBookDetail('${book.id}')" style="cursor:pointer;">
           ${cover}
@@ -3296,8 +3544,8 @@ function refreshDashboard() {
   if (want.length) {
     wantList.innerHTML = want.slice(0, 5).map(book => `
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;" onclick="openBookDetail('${book.id}')">
-        <div style="width:28px;height:42px;border-radius:3px;background:var(--bg-elevated);overflow:hidden;flex-shrink:0;font-size:14px;display:flex;align-items:center;justify-content:center;">
-          ${book.coverUrl ? `<img src="${book.coverUrl}" onerror="this.parentElement.innerHTML='📚'" style="width:100%;height:100%;object-fit:cover;" alt=""/>` : '📚'}
+        <div style="width:28px;height:42px;border-radius:3px;overflow:hidden;flex-shrink:0;">
+          ${bookCoverImg(book)}
         </div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(book.title)}</div>
@@ -3344,16 +3592,17 @@ function updateLibCount() {
 // ---- STATS ----
 function renderStats() {
   const readBooks = books.filter(b => b.status === 'read');
-  document.getElementById('s-total').textContent = books.length;
+  const allBooks = books;
+  document.getElementById('s-total').textContent = allBooks.length;
   document.getElementById('s-read').textContent = readBooks.length;
-  const rated = readBooks.filter(b => b.rating);
+  const rated = readBooks.filter(b => b.rating && b.rating > 0);
   document.getElementById('s-avg-rating').textContent = rated.length 
     ? (rated.reduce((s,b) => s + b.rating, 0) / rated.length).toFixed(1) + '★'
     : '—';
   const genres = new Set(readBooks.map(b => b.genre).filter(Boolean));
   document.getElementById('s-genres').textContent = genres.size;
 
-  // Year chart
+  // ---- Year chart ----
   const yearCounts = {};
   const curYear = new Date().getFullYear();
   for (let y = curYear - 4; y <= curYear; y++) yearCounts[y] = 0;
@@ -3366,12 +3615,29 @@ function renderStats() {
   const maxYear = Math.max(...Object.values(yearCounts), 1);
   document.getElementById('year-chart').innerHTML = Object.entries(yearCounts).map(([y, c]) => `
     <div class="year-bar-wrap">
-      <div class="year-bar" data-val="${c}" style="height:${Math.max(4, (c/maxYear)*100)}%; background:${y == curYear ? 'var(--accent)' : 'var(--border)'}; margin-top:auto;"></div>
+      <div class="year-bar" data-val="${c}" style="height:${Math.max(4, (c/maxYear)*100)}%; background:${y == curYear ? 'var(--accent)' : 'var(--border)'}; margin-top:auto;" title="${c} books in ${y}"></div>
       <div class="year-bar-label">${y}</div>
     </div>
   `).join('');
 
-  // Genre chart
+  // ---- Monthly chart (current year) ----
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthlyCounts = new Array(12).fill(0);
+  readBooks.forEach(b => {
+    if (b.dateRead && b.dateRead.startsWith(curYear.toString())) {
+      const m = parseInt(b.dateRead.substring(5, 7)) - 1;
+      if (m >= 0 && m < 12) monthlyCounts[m]++;
+    }
+  });
+  const maxMonth = Math.max(...monthlyCounts, 1);
+  document.getElementById('monthly-chart').innerHTML = monthlyCounts.map((c, i) => `
+    <div class="year-bar-wrap">
+      <div class="year-bar" data-val="${c}" style="height:${Math.max(4, (c/maxMonth)*100)}%; background:${i === new Date().getMonth() ? 'var(--accent)' : 'var(--blue)'}; opacity:${c===0?'0.3':'1'}; margin-top:auto;" title="${c} books in ${monthNames[i]}"></div>
+      <div class="year-bar-label">${monthNames[i].substring(0,1)}</div>
+    </div>
+  `).join('');
+
+  // ---- Genre chart ----
   const genreCount = {};
   readBooks.forEach(b => { if (b.genre) genreCount[b.genre] = (genreCount[b.genre]||0) + 1; });
   const topGenres = Object.entries(genreCount).sort((a,b) => b[1]-a[1]).slice(0,6);
@@ -3385,9 +3651,9 @@ function renderStats() {
           <div class="bar-value">${c}</div>
         </div>
       `).join('')
-    : '<div style="color:var(--text-muted);font-size:13px;">Add genres to your books to see stats here</div>';
+    : '<div style="color:var(--text-muted);font-size:13px;">Add genres to see stats</div>';
 
-  // Authors
+  // ---- Top Authors (most read) ----
   const authorCount = {};
   readBooks.forEach(b => { if (b.author) authorCount[b.author] = (authorCount[b.author]||0) + 1; });
   const topAuthors = Object.entries(authorCount).sort((a,b) => b[1]-a[1]).slice(0,5);
@@ -3402,7 +3668,7 @@ function renderStats() {
       `).join('')
     : '<div style="color:var(--text-muted);font-size:13px;">No books marked as read yet</div>';
 
-  // Rating dist
+  // ---- Rating distribution ----
   const ratingDist = [0,0,0,0,0];
   rated.forEach(b => { if (b.rating >= 1 && b.rating <= 5) ratingDist[b.rating-1]++; });
   const maxRating = Math.max(...ratingDist, 1);
@@ -3413,6 +3679,100 @@ function renderStats() {
       <div class="bar-value">${ratingDist[r-1]}</div>
     </div>
   `).join('');
+
+  // ---- Best Rated Books Leaderboard ----
+  const ratedBooks = readBooks.filter(b => b.rating > 0).sort((a,b) => {
+    if (b.rating !== a.rating) return b.rating - a.rating;
+    return (b.dateRead || '').localeCompare(a.dateRead || '');
+  }).slice(0, 10);
+  const medalClass = (i) => i === 0 ? 'lb-medal-1' : i === 1 ? 'lb-medal-2' : i === 2 ? 'lb-medal-3' : 'lb-medal-n';
+  const medalChar = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+  document.getElementById('best-rated-list').innerHTML = ratedBooks.length
+    ? ratedBooks.map((book, i) => `
+        <div class="leaderboard-item" onclick="openBookDetail('${book.id}')" style="cursor:pointer;">
+          <div class="leaderboard-rank ${medalClass(i)}">${medalChar(i)}</div>
+          <div class="leaderboard-cover">${bookCoverImg(book)}</div>
+          <div class="leaderboard-info">
+            <div class="leaderboard-title">${escHtml(book.title)}</div>
+            <div class="leaderboard-sub">${escHtml(book.author)}${book.dateRead ? ' · ' + book.dateRead.substring(0,4) : ''}</div>
+          </div>
+          <div class="leaderboard-score">${'★'.repeat(book.rating)}</div>
+        </div>
+      `).join('')
+    : '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">Rate some books to see your leaderboard</div>';
+
+  // ---- Most Read Authors (with cover sample) ----
+  const authorData = {};
+  readBooks.forEach(b => {
+    if (!b.author) return;
+    if (!authorData[b.author]) authorData[b.author] = { count: 0, books: [], totalRating: 0, ratedCount: 0 };
+    authorData[b.author].count++;
+    authorData[b.author].books.push(b);
+    if (b.rating) { authorData[b.author].totalRating += b.rating; authorData[b.author].ratedCount++; }
+  });
+  const topAuthorsFull = Object.entries(authorData).sort((a,b) => b[1].count - a[1].count).slice(0, 8);
+  document.getElementById('most-read-authors-list').innerHTML = topAuthorsFull.length
+    ? topAuthorsFull.map(([author, data], i) => {
+        const avgRating = data.ratedCount ? (data.totalRating / data.ratedCount).toFixed(1) : null;
+        const sampleBook = data.books.find(b => b.coverUrl) || data.books[0];
+        return `
+          <div class="leaderboard-item">
+            <div class="leaderboard-rank ${medalClass(i)}">${medalChar(i)}</div>
+            <div class="leaderboard-cover">${sampleBook ? bookCoverImg(sampleBook) : ''}</div>
+            <div class="leaderboard-info">
+              <div class="leaderboard-title">${escHtml(author)}</div>
+              <div class="leaderboard-sub">${data.count} book${data.count!==1?'s':''}${avgRating ? ` · avg ${avgRating}★` : ''}</div>
+            </div>
+            <div class="leaderboard-score" style="color:var(--accent);">${data.count}</div>
+          </div>
+        `;
+      }).join('')
+    : '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No read books yet</div>';
+
+  // ---- Reading Summary ----
+  const totalPages = readBooks.reduce((s, b) => s + (b.pages || 0), 0);
+  const thisYearBooks = readBooks.filter(b => b.dateRead && b.dateRead.startsWith(curYear.toString()));
+  const booksWithDates = readBooks.filter(b => b.dateStarted && b.dateRead);
+  let avgDays = 0;
+  if (booksWithDates.length) {
+    const totalDays = booksWithDates.reduce((s, b) => {
+      const diff = (new Date(b.dateRead) - new Date(b.dateStarted)) / 86400000;
+      return s + (diff > 0 ? diff : 0);
+    }, 0);
+    avgDays = Math.round(totalDays / booksWithDates.length);
+  }
+  document.getElementById('reading-summary').innerHTML = `
+    <div class="time-stat-box">
+      <div class="time-stat-val">${thisYearBooks.length}</div>
+      <div class="time-stat-label">Books this year</div>
+    </div>
+    <div class="time-stat-box">
+      <div class="time-stat-val">${totalPages > 1000 ? (totalPages/1000).toFixed(1)+'k' : totalPages}</div>
+      <div class="time-stat-label">Pages read total</div>
+    </div>
+    <div class="time-stat-box">
+      <div class="time-stat-val">${avgDays || '—'}</div>
+      <div class="time-stat-label">Avg days per book</div>
+    </div>
+  `;
+
+  // ---- Format Breakdown ----
+  const owned = books.filter(b => b.ownPhysical || b.ownDigital || b.ownBorrowed);
+  const physCount = books.filter(b => b.ownPhysical).length;
+  const digCount = books.filter(b => b.ownDigital).length;
+  const borCount = books.filter(b => b.ownBorrowed).length;
+  const maxFmt = Math.max(physCount, digCount, borCount, 1);
+  document.getElementById('format-chart').innerHTML = [
+    ['📖 Physical', physCount, 'var(--green)'],
+    ['💻 Digital', digCount, 'var(--blue)'],
+    ['🤝 Borrowed', borCount, 'var(--purple)'],
+  ].map(([label, count, color]) => `
+    <div class="bar-row">
+      <div class="bar-label" style="font-size:11px;">${label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(count/maxFmt)*100}%;background:${color};"></div></div>
+      <div class="bar-value">${count}</div>
+    </div>
+  `).join('') + (physCount + digCount + borCount === 0 ? '<div style="color:var(--text-muted);font-size:13px;">Track ownership when adding books</div>' : '');
 }
 
 // ---- SETTINGS ----
@@ -3421,6 +3781,23 @@ function showSettingsPanel(id, el) {
   document.querySelectorAll('.settings-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('sp-' + id).classList.add('active');
   el.classList.add('active');
+  // Load profile data when switching to profile panel
+  if (id === 'profile') {
+    const nameEl = document.getElementById('profile-display-name');
+    const emailEl = document.getElementById('profile-email');
+    if (nameEl) nameEl.value = settings.displayName || currentUser?.displayName || '';
+    if (emailEl) emailEl.textContent = currentUser?.email || '—';
+  }
+}
+
+async function saveDisplayName() {
+  const name = document.getElementById('profile-display-name').value.trim();
+  if (!name) { showToast('Please enter a display name', 'error'); return; }
+  settings.displayName = name;
+  save();
+  // Update greeting and sidebar
+  updateUserUI(currentUser);
+  showToast(`Display name updated to "${name}"`, 'success');
 }
 
 async function saveGoal() {
@@ -3510,7 +3887,7 @@ function importShelfwise(event) {
       }
       showToast('Library restored from backup ✓', 'success');
     } catch(err) {
-      showToast('Invalid Shelfwise JSON file', 'error');
+      showToast('Invalid ConnieReads JSON file', 'error');
     }
   };
   reader.readAsText(file);
@@ -3520,7 +3897,7 @@ function importShelfwise(event) {
 function exportData(format) {
   if (format === 'json') {
     const data = { books, collections, settings, exportedAt: new Date().toISOString(), version: '1.0' };
-    downloadFile(JSON.stringify(data, null, 2), 'shelfwise-backup.json', 'application/json');
+    downloadFile(JSON.stringify(data, null, 2), 'conniereads-backup.json', 'application/json');
     showToast('Library exported as JSON', 'success');
   } else if (format === 'csv') {
     const headers = ['Title','Author','Genre','Status','Rating','Date Read','Pages','Notes','Own Physical','Own Digital','Borrowed'];
@@ -3528,7 +3905,7 @@ function exportData(format) {
       b.title, b.author, b.genre || '', b.status, b.rating || '', b.dateRead || '', b.pages || '',
       (b.notes || '').replace(/"/g,'""'), b.ownPhysical ? 'Yes' : '', b.ownDigital ? 'Yes' : '', b.ownBorrowed ? 'Yes' : ''
     ].map(v => `"${v}"`).join(','));
-    downloadFile([headers.join(','), ...rows].join('\n'), 'shelfwise-library.csv', 'text/csv');
+    downloadFile([headers.join(','), ...rows].join('\n'), 'conniereads-library.csv', 'text/csv');
     showToast('Library exported as CSV', 'success');
   }
 }
