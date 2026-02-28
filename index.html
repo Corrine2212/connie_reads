@@ -2485,12 +2485,24 @@ a { color: inherit; text-decoration: none; }
 
         <!-- Toolbar -->
         <div class="lib-toolbar">
-          <button class="btn btn-secondary" id="filter-toggle-btn" onclick="toggleFilterPanel()" style="gap:6px;">
+          <!-- Search bar -->
+          <div style="position:relative;flex:1;min-width:0;max-width:320px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+              style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-muted);pointer-events:none;">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/>
+            </svg>
+            <input type="text" class="form-input" id="lib-search" 
+              style="padding-left:32px;border-radius:20px;height:36px;font-size:13px;" 
+              placeholder="Search your library..." 
+              oninput="renderLibrary()" autocomplete="off"/>
+          </div>
+          <!-- Filter toggle -->
+          <button class="btn btn-secondary" id="filter-toggle-btn" onclick="toggleFilterPanel()" style="gap:6px;height:36px;white-space:nowrap;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
             Filter <span id="filter-badge" style="display:none;" class="filter-badge">0</span>
           </button>
           <div style="flex:1;"></div>
-          <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);">Sort:</span>
+          <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);white-space:nowrap;">Sort:</span>
           <select class="filter-select" onchange="setSortBy(this.value)" id="sort-select">
             <option value="dateAdded">Date Added</option>
             <option value="title">Title A–Z</option>
@@ -3076,6 +3088,261 @@ a { color: inherit; text-decoration: none; }
 // ===================================================
 //  SHELFWISE - Firebase-Integrated Application Logic
 // ===================================================
+
+// ---- UTILS (must be first) ----
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function statusLabel(s) { return { want:'Want to Read', reading:'Reading', read:'Read', dnf:'DNF', borrowed:'Borrowed' }[s] || s; }
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+function downloadFile(content, filename, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function parseCSV(text) {
+  const lines = text.split('\n');
+  if (!lines.length) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = [];
+    let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') inQ = !inQ;
+      else if (ch === ',' && !inQ) { vals.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    vals.push(cur);
+    return Object.fromEntries(headers.map((h, i) => [h, (vals[i]||'').trim().replace(/^"|"$/g,'')]));
+  });
+}
+
+
+// ========== BARCODE SCANNER ==========
+let scannerStream = null;
+let scannerAnimFrame = null;
+let scannedBookData = null;
+let zxingReader = null;
+let zxingLoaded = false;
+
+async function loadZXing() {
+  if (zxingLoaded && window.ZXing) return true;
+  return new Promise(resolve => {
+    const s = document.createElement('script');
+    // ZXing-js: reads EAN-13 (ISBN barcodes) and QR codes
+    s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js';
+    s.onload = () => { zxingLoaded = true; resolve(true); };
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+}
+
+async function openScanner() {
+  openModal('scanner-modal');
+  const statusEl = document.getElementById('scanner-status');
+  const resultEl = document.getElementById('scanner-result');
+  const addBtn = document.getElementById('scanner-add-btn');
+  statusEl.textContent = '📷 Loading barcode reader...';
+  resultEl.style.display = 'none';
+  addBtn.style.display = 'none';
+  scannedBookData = null;
+
+  const loaded = await loadZXing();
+  if (!loaded || !window.ZXing) {
+    statusEl.textContent = '❌ Could not load barcode library. Check your connection.';
+    return;
+  }
+
+  try {
+    // ZXing browser multi-format reader - handles EAN-13 (ISBN barcodes)
+    zxingReader = new ZXing.BrowserMultiFormatReader();
+    const video = document.getElementById('scanner-video');
+
+    // Get rear camera on mobile
+    const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+    const rearCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
+    const deviceId = rearCam?.deviceId;
+
+    statusEl.textContent = '🔍 Point camera at the ISBN barcode on the book's back cover...';
+
+    await zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
+      if (result) {
+        const text = result.getText();
+        // Accept EAN-13 (978/979 prefix = book ISBN), EAN-10, or pure numeric 13-digit
+        const clean = text.replace(/[^0-9X]/gi, '');
+        if (clean.length === 13 || clean.length === 10) {
+          handleISBNDetected(clean);
+        }
+      }
+      // Ignore DecodeHintType errors - they're normal during scanning
+    });
+
+    scannerStream = { stop: () => zxingReader.reset() };
+
+  } catch(e) {
+    console.error('Scanner error:', e);
+    if (e.name === 'NotAllowedError' || e.message?.includes('Permission')) {
+      statusEl.textContent = '🚫 Camera access denied. Please allow camera in your browser settings.';
+    } else if (e.name === 'NotFoundError') {
+      statusEl.textContent = '📷 No camera found. Please use a device with a camera.';
+    } else {
+      statusEl.textContent = '❌ Camera error: ' + (e.message || 'Unknown error');
+    }
+  }
+}
+
+function startScanning() { /* handled by ZXing decode loop */ }
+
+async function handleISBNDetected(isbn) {
+  clearInterval(scannerInterval);
+  stopCamera();
+  document.getElementById('scanner-status').textContent = '✅ Barcode detected!';
+  document.getElementById('scanner-isbn-display').textContent = isbn;
+  document.getElementById('scanner-result').style.display = 'block';
+  document.getElementById('scanner-book-preview').textContent = 'Looking up book...';
+
+  try {
+    // Try Hardcover first for ISBN lookup
+    let found = null;
+    try {
+      const hcQuery = `query { books(where: {default_physical_edition: {isbn_13: {_eq: "${isbn}"}}}, limit: 1) {
+        id title contributions { author { name } }
+        default_physical_edition { isbn_13 isbn_10 pages_count publisher { name } image { url } }
+        cached_image { url } description
+      }}`;
+      const hcRes = await fetch('https://api.hardcover.app/v1/graphql', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: hcQuery })
+      });
+      const hcData = await hcRes.json();
+      const b = hcData?.data?.books?.[0];
+      if (b) {
+        const ed = b.default_physical_edition;
+        found = {
+          id: String(b.id),
+          title: b.title,
+          author: (b.contributions||[]).map(c => c.author?.name).filter(Boolean).join(', ') || 'Unknown',
+          genre: '',
+          pages: ed?.pages_count || 0,
+          description: b.description || '',
+          isbn: ed?.isbn_13 || isbn,
+          publisher: ed?.publisher?.name || '',
+          coverUrl: b.cached_image?.url || ed?.image?.url || '',
+        };
+      }
+    } catch(e) { console.warn('Hardcover ISBN lookup failed'); }
+
+    // Fall back to Open Library
+    if (!found) {
+      const olRes = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
+      if (olRes.ok) {
+        const olData = await olRes.json();
+        const coverId = olData.covers?.[0];
+        found = {
+          id: isbn,
+          title: olData.title || 'Unknown Title',
+          author: 'Unknown',
+          genre: '',
+          pages: olData.number_of_pages || 0,
+          description: '',
+          isbn,
+          publisher: (olData.publishers||[])[0] || '',
+          coverUrl: coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` :
+                    `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`,
+        };
+      }
+    }
+
+    if (found) {
+      scannedBookData = found;
+      document.getElementById('scanner-book-preview').textContent =
+        `"${scannedBookData.title}" by ${scannedBookData.author}`;
+      document.getElementById('scanner-add-btn').style.display = 'flex';
+    } else {
+      document.getElementById('scanner-book-preview').textContent =
+        'Book not found in database. You can still add it manually.';
+      scannedBookData = { isbn, title: '', author: '', coverUrl: '' };
+      document.getElementById('scanner-add-btn').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('scanner-book-preview').textContent = 'Lookup failed — check your connection.';
+  }
+}
+
+function addScannedBook() {
+  if (!scannedBookData) return;
+  closeScanner();
+  openAddModal(scannedBookData);
+}
+
+function stopCamera() {
+  cancelAnimationFrame(scannerAnimFrame);
+  if (zxingReader) { try { zxingReader.reset(); } catch(e){} zxingReader = null; }
+  if (scannerStream && scannerStream.getTracks) {
+    scannerStream.getTracks().forEach(t => t.stop());
+  }
+  scannerStream = null;
+}
+
+function closeScanner() {
+  stopCamera();
+  closeModal('scanner-modal');
+}
+
+// ========== END BARCODE SCANNER ==========
+// ---- INIT ----
+document.addEventListener('DOMContentLoaded', () => {
+  loadLocal();
+  applyTheme();
+  const year = new Date().getFullYear();
+  document.getElementById('goal-year').textContent = year;
+  document.getElementById('goal-year-setting').textContent = year;
+  if (settings.goal) document.getElementById('goal-input').value = settings.goal;
+  const themeToggle = document.getElementById('theme-toggle-settings');
+  if (themeToggle) themeToggle.classList.toggle('on', settings.theme === 'dark');
+  refreshDashboard();
+});
+</script>
+
+
+<!-- BARCODE SCANNER MODAL -->
+<div class="modal-overlay" id="scanner-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">📷 Scan Book Barcode</div>
+      <button class="modal-close" onclick="closeScanner()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="padding-top:0;">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Point your camera at the ISBN barcode on the back of the book.</p>
+      <div class="scanner-overlay">
+        <video id="scanner-video" autoplay playsinline muted></video>
+        <div class="scanner-frame"><div class="scanner-line"></div></div>
+        <canvas id="scanner-canvas"></canvas>
+      </div>
+      <div class="scanner-status" id="scanner-status">📷 Starting camera...</div>
+      <div id="scanner-result" style="display:none; padding:14px; background:var(--bg-elevated); border-radius:10px; margin-top:12px;">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">ISBN detected:</div>
+        <div style="font-size:16px; font-weight:600; color:var(--accent); letter-spacing:1px;" id="scanner-isbn-display"></div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;" id="scanner-book-preview">Searching...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeScanner()">Cancel</button>
+      <button class="btn btn-primary" id="scanner-add-btn" style="display:none;" onclick="addScannedBook()">Add to Library</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
 
 // ---- STATE ----
 let books = [];
@@ -3674,7 +3941,7 @@ async function deleteCurrentBook() {
   showToast(`"${book.title}" deleted`, 'info');
 }
 
-// ---- COVER REFRESH (cycle through sources) ----
+// ---- COVER REFRESH (Hardcover + Open Library, no Google Books) ----
 async function refreshCover() {
   const title = document.getElementById('f-title').value.trim();
   const author = document.getElementById('f-author').value.trim();
@@ -3683,129 +3950,199 @@ async function refreshCover() {
 
   const key = isbn || `${title}_${author}`;
   coverRefreshAttempts[key] = (coverRefreshAttempts[key] || 0) + 1;
+  showToast('Searching for cover...', 'info');
 
-  // Try to get the Google Books ID first for better cover URLs
-  showToast('Fetching cover...', 'info');
+  const sources = [];
 
-  try {
-    const searchQ = isbn ? `isbn:${isbn}` : `intitle:${title}${author ? '+inauthor:'+author : ''}`;
-    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQ)}&maxResults=5`);
-    const data = await res.json();
-
-    // Build a list of all possible cover URLs from results
-    const sources = [];
-    (data.items || []).forEach(item => {
-      const id = item.id;
-      const imgLinks = item.volumeInfo?.imageLinks || {};
-      const isbns = item.volumeInfo?.industryIdentifiers || [];
-      const isbn13 = isbns.find(i => i.type === 'ISBN_13')?.identifier;
-      const isbn10 = isbns.find(i => i.type === 'ISBN_10')?.identifier;
-
-      // Google Books content API (most reliable)
-      sources.push(`https://books.google.com/books/content?id=${id}&printsec=frontcover&img=1&zoom=1&source=gbs_api`);
-      // Higher zoom for larger image
-      sources.push(`https://books.google.com/books/content?id=${id}&printsec=frontcover&img=1&zoom=2&source=gbs_api`);
-      if (imgLinks.thumbnail) sources.push(imgLinks.thumbnail.replace('http:', 'https:').replace('&edge=curl',''));
-      if (isbn13) sources.push(`https://covers.openlibrary.org/b/isbn/${isbn13}-L.jpg`);
-      if (isbn10) sources.push(`https://covers.openlibrary.org/b/isbn/${isbn10}-L.jpg`);
-    });
-
-    // Also add Open Library title search
-    sources.push(`https://covers.openlibrary.org/b/title/${encodeURIComponent(title)}-L.jpg`);
-
-    if (sources.length === 0) {
-      showToast('No covers found. Try pasting a URL manually.', 'error');
-      return;
-    }
-
-    const idx = coverRefreshAttempts[key] % sources.length;
-    const source = sources[idx];
-    document.getElementById('cover-url-input').value = source;
-    updateCoverPreview();
-    showToast(`Trying cover ${idx + 1} of ${sources.length} — check preview!`, 'success');
-
-  } catch(e) {
-    showToast('Cover search failed. Try pasting a URL manually.', 'error');
+  // 1. Open Library by ISBN (most reliable if we have one)
+  if (isbn) {
+    sources.push(`https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`);
+    sources.push(`https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`);
   }
+
+  // 2. Try Hardcover API for cover
+  try {
+    const q = isbn ? `_eq: "${isbn}"` : `_ilike: "%${title.replace(/"/g,'')}%"`;
+    const field = isbn ? 'isbn_13' : 'title';
+    const hcQuery = isbn
+      ? `{ books(where: {default_physical_edition: {isbn_13: {_eq: "${isbn}"}}}, limit: 3) { cached_image { url } default_physical_edition { image { url } } } }`
+      : `{ books(where: {title: {_ilike: "%${title.replace(/"/g,'')}%"}}, order_by: {users_count: desc}, limit: 5) { cached_image { url } default_physical_edition { image { url } } } }`;
+    const hcRes = await fetch('https://api.hardcover.app/v1/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: `query ${hcQuery}` })
+    });
+    if (hcRes.ok) {
+      const hcData = await hcRes.json();
+      (hcData.data?.books || []).forEach(b => {
+        if (b.cached_image?.url) sources.push(b.cached_image.url);
+        if (b.default_physical_edition?.image?.url) sources.push(b.default_physical_edition.image.url);
+      });
+    }
+  } catch(e) { /* Hardcover unavailable */ }
+
+  // 3. Open Library by title
+  sources.push(`https://covers.openlibrary.org/b/title/${encodeURIComponent(title)}-L.jpg`);
+
+  // 4. Open Library search by title+author
+  try {
+    const olQ = encodeURIComponent(`${title}${author ? ' ' + author : ''}`);
+    const olRes = await fetch(`https://openlibrary.org/search.json?q=${olQ}&limit=3&fields=cover_i,isbn`);
+    if (olRes.ok) {
+      const olData = await olRes.json();
+      (olData.docs || []).forEach(doc => {
+        if (doc.cover_i) sources.push(`https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`);
+        const docIsbn = (doc.isbn || [])[0];
+        if (docIsbn) sources.push(`https://covers.openlibrary.org/b/isbn/${docIsbn}-L.jpg`);
+      });
+    }
+  } catch(e) { /* OL search unavailable */ }
+
+  const uniq = [...new Set(sources)];
+  if (!uniq.length) {
+    showToast('No covers found — try pasting a URL manually.', 'error');
+    return;
+  }
+
+  const idx = coverRefreshAttempts[key] % uniq.length;
+  document.getElementById('cover-url-input').value = uniq[idx];
+  updateCoverPreview();
+  showToast(`Cover ${idx + 1} of ${uniq.length} — check preview ↑`, 'success');
 }
 
 // ---- BOOK SEARCH (Google Books + Open Library fallback) ----
+// getBestCoverUrl - kept for any legacy calls but search now uses Hardcover/OL directly
 function getBestCoverUrl(item) {
+  // Legacy helper - now only called for any remaining Google Books results
   const info = item.volumeInfo || {};
   const imgLinks = info.imageLinks || {};
-  const gbId = item.id;
   const isbns = info.industryIdentifiers || [];
   const isbn13 = isbns.find(i => i.type === 'ISBN_13')?.identifier;
   const isbn10 = isbns.find(i => i.type === 'ISBN_10')?.identifier;
-
-  // Priority 1: Google Books cover via their CDN (zoom=1 is thumbnail, zoom=0 is small)
-  // Use the API thumbnail but force https and upgrade zoom
-  if (imgLinks.thumbnail) {
-    return imgLinks.thumbnail
-      .replace('http:', 'https:')
-      .replace('zoom=1', 'zoom=1')  // keep zoom=1, it's reliable
-      .replace('&edge=curl', '');   // remove curl effect
-  }
-  // Priority 2: Open Library by ISBN (very reliable if ISBN exists)
   if (isbn13) return `https://covers.openlibrary.org/b/isbn/${isbn13}-L.jpg`;
   if (isbn10) return `https://covers.openlibrary.org/b/isbn/${isbn10}-L.jpg`;
-  // Priority 3: Google Books content API (works without auth)
-  if (gbId) return `https://books.google.com/books/content?id=${gbId}&printsec=frontcover&img=1&zoom=1&source=gbs_api`;
+  if (imgLinks.thumbnail) return imgLinks.thumbnail.replace('http:', 'https:').replace('&edge=curl', '');
   return '';
+}
+
+// ---- HARDCOVER API SEARCH ----
+// Hardcover is a free book community API - no key needed for public search
+async function searchHardcover(q) {
+  const query = `query SearchBooks($q: String!) {
+    books(where: {title: {_ilike: $q}}, order_by: {users_count: desc}, limit: 20) {
+      id title
+      contributions { author { name } }
+      default_physical_edition { 
+        isbn_13 isbn_10 pages_count
+        image { url }
+        publisher { name }
+      }
+      cached_image { url }
+      description
+    }
+  }`;
+  const res = await fetch('https://api.hardcover.app/v1/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, variables: { q: `%${q}%` } })
+  });
+  if (!res.ok) throw new Error('Hardcover API error ' + res.status);
+  const data = await res.json();
+  return (data.data?.books || []).map(b => {
+    const ed = b.default_physical_edition;
+    const author = (b.contributions||[]).map(c => c.author?.name).filter(Boolean).join(', ') || 'Unknown';
+    const coverUrl = b.cached_image?.url || ed?.image?.url || '';
+    return {
+      id: String(b.id),
+      title: b.title || 'Unknown Title',
+      author,
+      genre: '',
+      pages: ed?.pages_count || 0,
+      description: b.description || '',
+      isbn: ed?.isbn_13 || ed?.isbn_10 || String(b.id),
+      publisher: ed?.publisher?.name || '',
+      coverUrl,
+      source: 'hardcover',
+    };
+  });
+}
+
+// Open Library search fallback
+async function searchOpenLibrary(q) {
+  const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=20&fields=key,title,author_name,isbn,number_of_pages_median,subject,publisher,cover_i`);
+  if (!res.ok) throw new Error('Open Library error ' + res.status);
+  const data = await res.json();
+  return (data.docs || []).map(doc => {
+    const isbn = (doc.isbn || [])[0] || '';
+    const coverId = doc.cover_i;
+    const coverUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : 
+                     isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : '';
+    return {
+      id: doc.key || isbn,
+      title: doc.title || 'Unknown Title',
+      author: (doc.author_name || []).join(', ') || 'Unknown',
+      genre: (doc.subject || []).slice(0, 2).join(', '),
+      pages: doc.number_of_pages_median || 0,
+      description: '',
+      isbn,
+      publisher: (doc.publisher || [])[0] || '',
+      coverUrl,
+      source: 'openlibrary',
+    };
+  });
 }
 
 async function searchBooks(query) {
   const input = document.getElementById('discover-search');
-  const q = query || input.value.trim();
+  const q = (query || input.value).trim();
   if (!q) return;
   input.value = q;
   showPage('search');
 
   const grid = document.getElementById('search-results-grid');
-  grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:var(--text-muted);"><div style="font-size:32px;margin-bottom:12px;">🔍</div><div>Searching Google Books...</div></div>';
+  grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">
+    <div style="font-size:32px;margin-bottom:12px;">🔍</div>
+    <div>Searching Hardcover...</div>
+  </div>`;
 
+  let results = [];
+  let source = '';
+
+  // Try Hardcover first
   try {
-    // Google Books API - no key needed for basic search
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=20&printType=books&langRestrict=en`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    if (!data.items || data.items.length === 0) {
-      grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px; color:var(--text-muted);">
-        <div style="font-size:32px;margin-bottom:12px;">📭</div>
-        <div style="font-size:15px; margin-bottom:8px;">No results for "<strong>${escHtml(q)}</strong>"</div>
-        <div style="font-size:13px;">Try a different title, author, or ISBN</div>
-      </div>`;
-      return;
-    }
-
-    lastSearchResults = data.items.map(item => {
-      const info = item.volumeInfo || {};
-      const isbns = info.industryIdentifiers || [];
-      const isbn13 = isbns.find(i => i.type === 'ISBN_13')?.identifier || '';
-      return {
-        id: item.id,
-        title: info.title || 'Unknown Title',
-        author: (info.authors || ['Unknown Author']).join(', '),
-        genre: (info.categories || []).join(', '),
-        pages: info.pageCount || 0,
-        description: info.description || '',
-        isbn: isbn13 || item.id,
-        publisher: info.publisher || '',
-        publishedDate: info.publishedDate || '',
-        coverUrl: getBestCoverUrl(item),
-      };
-    });
-    renderSearchResults(lastSearchResults);
+    results = await searchHardcover(q);
+    source = 'hardcover';
   } catch(e) {
-    console.error('Search error:', e);
-    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px; color:var(--red);">
-      <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
-      <div>Search failed: ${escHtml(e.message)}</div>
-      <div style="font-size:12px; margin-top:8px; color:var(--text-muted);">Check your internet connection and try again</div>
-    </div>`;
+    console.warn('Hardcover failed:', e.message, '— trying Open Library');
   }
+
+  // Fall back to Open Library if Hardcover fails or returns nothing
+  if (!results.length) {
+    try {
+      results = await searchOpenLibrary(q);
+      source = 'openlibrary';
+    } catch(e) {
+      console.warn('Open Library failed:', e.message);
+    }
+  }
+
+  if (!results.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">
+      <div style="font-size:32px;margin-bottom:12px;">📭</div>
+      <div style="font-size:15px;margin-bottom:8px;">No results for "<strong>${escHtml(q)}</strong>"</div>
+      <div style="font-size:13px;">Try a different title, author, or ISBN</div>
+    </div>`;
+    return;
+  }
+
+  lastSearchResults = results;
+  renderSearchResults(results);
+  
+  const sourceLabel = source === 'hardcover' ? '📗 Hardcover' : '📚 Open Library';
+  const statusEl = document.createElement('div');
+  statusEl.style.cssText = 'grid-column:1/-1;font-size:11px;color:var(--text-muted);text-align:right;padding:4px 0;';
+  statusEl.textContent = `${results.length} results via ${sourceLabel}`;
+  grid.appendChild(statusEl);
 }
 
 function renderSearchResults(results) {
@@ -3872,7 +4209,11 @@ function renderLibrary() {
   buildFilterOptions();
   updateOwnedCounts();
 
+  const searchQ = (document.getElementById('lib-search')?.value || '').toLowerCase().trim();
+
   let filtered = books.filter(b => {
+    // Text search
+    if (searchQ && ![b.title, b.author, b.genre, ...(b.tags||[])].some(s => (s||'').toLowerCase().includes(searchQ))) return false;
     // Status
     if (fp.status !== 'all' && b.status !== fp.status) return false;
     // Ownership
@@ -3978,6 +4319,8 @@ function updateFilterBadge() {
   count += fp.authors.length;
   count += fp.tags.length;
   if (fp.rating >= 0) count++;
+  const searchQ = (document.getElementById('lib-search')?.value || '').trim();
+  if (searchQ) count++;
 
   const badge = document.getElementById('filter-badge');
   const btn = document.getElementById('filter-toggle-btn');
@@ -4075,6 +4418,8 @@ function fpSetRating(rating, el) {
 
 function clearAllFilters() {
   fp.status = 'all'; fp.ownership = []; fp.genres = []; fp.authors = []; fp.tags = []; fp.rating = -1;
+  const si = document.getElementById('lib-search');
+  if (si) si.value = '';
   document.querySelectorAll('#filter-panel .filter-chip-sm').forEach(b => b.classList.remove('active'));
   document.querySelector('#fp-status [data-status="all"]')?.classList.add('active');
   document.querySelectorAll('.owned-badge').forEach(b => b.classList.remove('active'));
@@ -4718,221 +5063,3 @@ function showToast(message, type = 'info') {
 
 // ---- HELPERS ----
 function genId() { return Math.random().toString(36).substr(2,9) + Date.now().toString(36); }
-function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function statusLabel(s) { return { want:'Want to Read', reading:'Reading', read:'Read', dnf:'DNF', borrowed:'Borrowed' }[s] || s; }
-function timeAgo(ts) {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 60) return 'just now';
-  if (s < 3600) return Math.floor(s/60) + 'm ago';
-  if (s < 86400) return Math.floor(s/3600) + 'h ago';
-  return Math.floor(s/86400) + 'd ago';
-}
-function downloadFile(content, filename, mime) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-function parseCSV(text) {
-  const lines = text.split('\n');
-  if (!lines.length) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
-  return lines.slice(1).filter(l => l.trim()).map(line => {
-    const vals = [];
-    let cur = '', inQ = false;
-    for (const ch of line) {
-      if (ch === '"') inQ = !inQ;
-      else if (ch === ',' && !inQ) { vals.push(cur); cur = ''; }
-      else cur += ch;
-    }
-    vals.push(cur);
-    return Object.fromEntries(headers.map((h, i) => [h, (vals[i]||'').trim().replace(/^"|"$/g,'')]));
-  });
-}
-
-
-// ========== BARCODE SCANNER ==========
-let scannerStream = null;
-let scannerAnimFrame = null;
-let scannedBookData = null;
-let zxingReader = null;
-let zxingLoaded = false;
-
-async function loadZXing() {
-  if (zxingLoaded && window.ZXing) return true;
-  return new Promise(resolve => {
-    const s = document.createElement('script');
-    // ZXing-js: reads EAN-13 (ISBN barcodes) and QR codes
-    s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js';
-    s.onload = () => { zxingLoaded = true; resolve(true); };
-    s.onerror = () => resolve(false);
-    document.head.appendChild(s);
-  });
-}
-
-async function openScanner() {
-  openModal('scanner-modal');
-  const statusEl = document.getElementById('scanner-status');
-  const resultEl = document.getElementById('scanner-result');
-  const addBtn = document.getElementById('scanner-add-btn');
-  statusEl.textContent = '📷 Loading barcode reader...';
-  resultEl.style.display = 'none';
-  addBtn.style.display = 'none';
-  scannedBookData = null;
-
-  const loaded = await loadZXing();
-  if (!loaded || !window.ZXing) {
-    statusEl.textContent = '❌ Could not load barcode library. Check your connection.';
-    return;
-  }
-
-  try {
-    // ZXing browser multi-format reader - handles EAN-13 (ISBN barcodes)
-    zxingReader = new ZXing.BrowserMultiFormatReader();
-    const video = document.getElementById('scanner-video');
-
-    // Get rear camera on mobile
-    const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
-    const rearCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
-    const deviceId = rearCam?.deviceId;
-
-    statusEl.textContent = '🔍 Point camera at the ISBN barcode on the book's back cover...';
-
-    await zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
-      if (result) {
-        const text = result.getText();
-        // Accept EAN-13 (978/979 prefix = book ISBN), EAN-10, or pure numeric 13-digit
-        const clean = text.replace(/[^0-9X]/gi, '');
-        if (clean.length === 13 || clean.length === 10) {
-          handleISBNDetected(clean);
-        }
-      }
-      // Ignore DecodeHintType errors - they're normal during scanning
-    });
-
-    scannerStream = { stop: () => zxingReader.reset() };
-
-  } catch(e) {
-    console.error('Scanner error:', e);
-    if (e.name === 'NotAllowedError' || e.message?.includes('Permission')) {
-      statusEl.textContent = '🚫 Camera access denied. Please allow camera in your browser settings.';
-    } else if (e.name === 'NotFoundError') {
-      statusEl.textContent = '📷 No camera found. Please use a device with a camera.';
-    } else {
-      statusEl.textContent = '❌ Camera error: ' + (e.message || 'Unknown error');
-    }
-  }
-}
-
-function startScanning() { /* handled by ZXing decode loop */ }
-
-async function handleISBNDetected(isbn) {
-  clearInterval(scannerInterval);
-  stopCamera();
-  document.getElementById('scanner-status').textContent = '✅ Barcode detected!';
-  document.getElementById('scanner-isbn-display').textContent = isbn;
-  document.getElementById('scanner-result').style.display = 'block';
-  document.getElementById('scanner-book-preview').textContent = 'Looking up book...';
-
-  try {
-    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&maxResults=1`);
-    const data = await res.json();
-    const item = data.items?.[0];
-    if (item) {
-      const info = item.volumeInfo || {};
-      const isbns = info.industryIdentifiers || [];
-      const isbn13 = isbns.find(i => i.type === 'ISBN_13')?.identifier || isbn;
-      scannedBookData = {
-        id: item.id,
-        title: info.title || 'Unknown Title',
-        author: (info.authors || ['Unknown']).join(', '),
-        genre: (info.categories || []).join(', '),
-        pages: info.pageCount || 0,
-        description: info.description || '',
-        isbn: isbn13,
-        publisher: info.publisher || '',
-        coverUrl: getBestCoverUrl(item),
-      };
-      document.getElementById('scanner-book-preview').textContent =
-        `"${scannedBookData.title}" by ${scannedBookData.author}`;
-      document.getElementById('scanner-add-btn').style.display = 'flex';
-    } else {
-      document.getElementById('scanner-book-preview').textContent =
-        'Book not found in database. You can still add it manually.';
-      scannedBookData = { isbn, title: '', author: '', coverUrl: '' };
-      document.getElementById('scanner-add-btn').style.display = 'flex';
-    }
-  } catch(e) {
-    document.getElementById('scanner-book-preview').textContent = 'Lookup failed — check your connection.';
-  }
-}
-
-function addScannedBook() {
-  if (!scannedBookData) return;
-  closeScanner();
-  openAddModal(scannedBookData);
-}
-
-function stopCamera() {
-  cancelAnimationFrame(scannerAnimFrame);
-  if (zxingReader) { try { zxingReader.reset(); } catch(e){} zxingReader = null; }
-  if (scannerStream && scannerStream.getTracks) {
-    scannerStream.getTracks().forEach(t => t.stop());
-  }
-  scannerStream = null;
-}
-
-function closeScanner() {
-  stopCamera();
-  closeModal('scanner-modal');
-}
-
-// ========== END BARCODE SCANNER ==========
-// ---- INIT ----
-document.addEventListener('DOMContentLoaded', () => {
-  loadLocal();
-  applyTheme();
-  const year = new Date().getFullYear();
-  document.getElementById('goal-year').textContent = year;
-  document.getElementById('goal-year-setting').textContent = year;
-  if (settings.goal) document.getElementById('goal-input').value = settings.goal;
-  const themeToggle = document.getElementById('theme-toggle-settings');
-  if (themeToggle) themeToggle.classList.toggle('on', settings.theme === 'dark');
-  refreshDashboard();
-});
-</script>
-
-
-<!-- BARCODE SCANNER MODAL -->
-<div class="modal-overlay" id="scanner-modal">
-  <div class="modal" style="max-width:440px;">
-    <div class="modal-header">
-      <div class="modal-title">📷 Scan Book Barcode</div>
-      <button class="modal-close" onclick="closeScanner()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body" style="padding-top:0;">
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Point your camera at the ISBN barcode on the back of the book.</p>
-      <div class="scanner-overlay">
-        <video id="scanner-video" autoplay playsinline muted></video>
-        <div class="scanner-frame"><div class="scanner-line"></div></div>
-        <canvas id="scanner-canvas"></canvas>
-      </div>
-      <div class="scanner-status" id="scanner-status">📷 Starting camera...</div>
-      <div id="scanner-result" style="display:none; padding:14px; background:var(--bg-elevated); border-radius:10px; margin-top:12px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">ISBN detected:</div>
-        <div style="font-size:16px; font-weight:600; color:var(--accent); letter-spacing:1px;" id="scanner-isbn-display"></div>
-        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;" id="scanner-book-preview">Searching...</div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeScanner()">Cancel</button>
-      <button class="btn btn-primary" id="scanner-add-btn" style="display:none;" onclick="addScannedBook()">Add to Library</button>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
