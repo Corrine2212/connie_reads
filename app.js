@@ -39,85 +39,20 @@ function parseCSV(text) {
 
 // ========== BARCODE SCANNER ==========
 let scannerStream = null;
-let scannerAnimFrame = null;
 let scannedBookData = null;
-let zxingReader = null;
-let zxingLoaded = false;
 
-async function loadZXing() {
-  if (zxingLoaded && window.ZXing) return true;
-  return new Promise(resolve => {
-    const s = document.createElement('script');
-    // ZXing-js: reads EAN-13 (ISBN barcodes) and QR codes
-    s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js';
-    s.onload = () => { zxingLoaded = true; resolve(true); };
-    s.onerror = () => resolve(false);
-    document.head.appendChild(s);
-  });
+function openScanner() {
+  showToast('Barcode scanner coming soon — please enter ISBN manually', 'info');
 }
-
-async function openScanner() {
-  openModal('scanner-modal');
-  const statusEl = document.getElementById('scanner-status');
-  const resultEl = document.getElementById('scanner-result');
-  const addBtn = document.getElementById('scanner-add-btn');
-  statusEl.textContent = '📷 Starting camera...';
-  resultEl.style.display = 'none';
-  addBtn.style.display = 'none';
-  scannedBookData = null;
-
-  const loaded = await loadZXing();
-  if (!loaded || !window.ZXing) {
-    statusEl.textContent = '❌ Could not load barcode library. Check your connection.';
-    return;
-  }
-
-  try {
-    const video = document.getElementById('scanner-video');
-
-    // Use environment-facing camera on mobile (rear camera)
-    const constraints = {
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
-    };
-
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    scannerStream = stream;
-    video.srcObject = stream;
-    await video.play();
-
-    statusEl.textContent = '🔍 Point at the barcode on the back cover...';
-
-    // Use ZXing to decode from the already-playing video element
-    zxingReader = new ZXing.BrowserMultiFormatReader();
-    zxingReader.decodeFromVideoElement(video, (result, err) => {
-      if (result) {
-        const text = result.getText();
-        const clean = text.replace(/[^0-9X]/gi, '');
-        if (clean.length === 13 || clean.length === 10) {
-          handleISBNDetected(clean);
-        }
-      }
-    });
-
-  } catch(e) {
-    console.error('Scanner error:', e);
-    if (e.name === 'NotAllowedError' || (e.message && e.message.includes('ermission'))) {
-      statusEl.textContent = '🚫 Camera access denied — please allow camera in your browser settings.';
-    } else if (e.name === 'NotFoundError') {
-      statusEl.textContent = '📷 No camera found on this device.';
-    } else if (e.name === 'NotSupportedError') {
-      statusEl.textContent = '❌ Camera not supported on this browser. Try Chrome or Safari.';
-    } else {
-      statusEl.textContent = '❌ Camera error: ' + (e.message || e.name || 'Unknown');
-    }
+function closeScanner() {}
+function stopCamera() {
+  if (scannerStream) {
+    try { scannerStream.getTracks().forEach(t => t.stop()); } catch(e) {}
+    scannerStream = null;
   }
 }
-
-function startScanning() { /* handled by ZXing decode loop */ }
+function addScannedBook() {}
+function handleISBNDetected() {}
 
 async function handleISBNDetected(isbn) {
   clearInterval(scannerInterval);
@@ -314,7 +249,10 @@ function subscribeToData() {
   unsubscribeBooks = fb().onSnapshot(booksCol(), snap => {
     books = snap.docs.map(d => ({ ...d.data(), id: d.id }));
     books.sort((a,b) => (b.dateAdded||0) - (a.dateAdded||0));
-    renderLibrary();
+    // Only re-render library if it's visible
+    if (document.getElementById('page-library')?.classList.contains('active')) {
+      renderLibrary();
+    }
     refreshDashboard();
     updateLibCount();
   }, err => {
@@ -1093,8 +1031,13 @@ function bookCoverImg(book, fallbackSizeClass = '') {
 }
 
 // ---- RENDER BOOK CARD ----
+let _renderLibTimer = null;
 function renderLibrary() {
-  // Build dynamic filter options from current library
+  // Debounce rapid calls (e.g. realtime Firestore updates)
+  clearTimeout(_renderLibTimer);
+  _renderLibTimer = setTimeout(_doRenderLibrary, 50);
+}
+function _doRenderLibrary() {
   buildFilterOptions();
   updateOwnedCounts();
 
@@ -1318,22 +1261,19 @@ function clearAllFilters() {
 
 function renderBookCard(book, i) {
   const stars = book.rating ? '★'.repeat(book.rating) : '';
-  const ownerBadge = book.ownBorrowed 
-    ? `<div class="cover-badge borrowed">B</div>` 
-    : (book.ownPhysical || book.ownDigital) 
-      ? `<div class="cover-badge owned">✓</div>` : '';
-  return `
-    <div class="book-card" onclick="openBookDetail('${book.id}')" style="animation-delay:${i*0.03}s">
-      <div class="book-cover-lg">${bookCoverImg(book)}${ownerBadge}</div>
-      <div class="book-card-title">${escHtml(book.title)}</div>
-      <div class="book-card-author">${escHtml(book.author)}</div>
-      <div class="book-card-meta">
-        <span class="status-badge status-${book.status}">${statusLabel(book.status)}</span>
-        ${stars ? `<span class="stars-small">${stars}</span>` : ''}
-      </div>
-      ${(book.tags||[]).length ? `<div class="tag-display" style="margin-top:4px;">${(book.tags).slice(0,2).map(t=>`<span class="tag-badge">${escHtml(t)}</span>`).join('')}</div>` : ''}
-    </div>
-  `;
+  const ownerBadge = book.ownBorrowed ? '<div class="cover-badge borrowed">B</div>'
+    : (book.ownPhysical || book.ownDigital) ? '<div class="cover-badge owned">✓</div>' : '';
+  const tagsHtml = (book.tags||[]).length
+    ? '<div class="tag-display" style="margin-top:4px;">' + book.tags.slice(0,2).map(t=>'<span class="tag-badge">'+escHtml(t)+'</span>').join('') + '</div>'
+    : '';
+  const delay = (i * 0.03).toFixed(2);
+  return `<div class="book-card" onclick="openBookDetail('${book.id}')" style="animation-delay:${delay}s">
+    <div class="book-cover-lg">${bookCoverImg(book)}${ownerBadge}</div>
+    <div class="book-card-title">${escHtml(book.title)}</div>
+    <div class="book-card-author">${escHtml(book.author)}</div>
+    <div class="book-card-meta"><span class="status-badge status-${book.status}">${statusLabel(book.status)}</span>${stars ? `<span class="stars-small">${stars}</span>` : ''}</div>
+    ${tagsHtml}
+  </div>`;
 }
 
 function renderBookListItem(book, i) {
