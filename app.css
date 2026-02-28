@@ -1973,7 +1973,7 @@ input[type="date"].form-input {
   .stat-change { display: none; }
 
   /* Dashboard single col */
-  #page-dashboard .dash-main { display: block; }
+  #page-dashboard .dash-main { display: flex; flex-direction: column; }
 
   /* Library grid */
   .books-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
@@ -2023,7 +2023,7 @@ input[type="date"].form-input {
   .greeting-sub { font-size: 11px; margin-bottom: 2px; }
 
   /* Stats: tight 2x2 */
-  .stats-row { grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 10px; }
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 0; }
   .stat-card { padding: 10px 8px; border-radius: 10px; }
   .stat-value { font-size: 20px; line-height: 1; }
   .stat-label { font-size: 10px; margin-top: 1px; }
@@ -2031,7 +2031,7 @@ input[type="date"].form-input {
   .stat-change { display: none; }
 
   /* Dash cards */
-  .dash-card { padding: 12px; margin-bottom: 8px; border-radius: 12px; }
+  .dash-card { padding: 12px; margin-bottom: 0; border-radius: 10px; }
   .dash-card-title { font-size: 13px; }
   .goal-count-text { font-size: 15px; }
   .goal-meta { font-size: 11px; }

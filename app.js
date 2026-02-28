@@ -1401,7 +1401,7 @@ function renderCollections() {
     `).join('');
     const more = colBooks.length > 4 ? `<div class="collection-more">+${colBooks.length - 4}</div>` : '';
     return `
-      <div class="collection-card">
+      <div class="collection-card" onclick="openCollectionDetail('${col.id}')" style="cursor:pointer;">
         <div>
           <span class="collection-emoji">${col.emoji}</span>
           <div class="collection-name">${escHtml(col.name)}</div>
@@ -1416,6 +1416,63 @@ function renderCollections() {
       Create New Collection
     </div>
   `;
+}
+
+// ---- COLLECTION DETAIL ----
+function openCollectionDetail(colId) {
+  const col = collections.find(c => c.id === colId);
+  if (!col) return;
+  const colBooks = books.filter(b => (b.collections || []).includes(colId));
+
+  const modal = document.getElementById('collection-detail-modal');
+  document.getElementById('col-detail-title').textContent = col.emoji + ' ' + col.name;
+  document.getElementById('col-detail-count').textContent = colBooks.length + ' book' + (colBooks.length !== 1 ? 's' : '');
+
+  const list = document.getElementById('col-detail-list');
+  if (colBooks.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:32px 0;color:var(--text-muted);font-size:13px;">No books in this collection yet.<br>Add books by editing them.</div>';
+  } else {
+    list.innerHTML = colBooks.map(book => {
+      const cover = book.coverUrl
+        ? `<img src="${book.coverUrl}" onerror="this.style.display='none'" alt="" style="width:100%;height:100%;object-fit:cover;"/>`
+        : bookSpineHTML(book);
+      const statusLabel = { read: 'Read', reading: 'Reading', want: 'Want to Read', dnf: 'DNF' }[book.status] || '';
+      const statusColor = { read: 'var(--green)', reading: 'var(--accent)', want: 'var(--blue)', dnf: 'var(--red)' }[book.status] || 'var(--text-muted)';
+      return `
+        <div class="book-item-horizontal" onclick="openBookDetail('${book.id}')" style="cursor:pointer;">
+          <div class="book-cover-sm">${cover}</div>
+          <div class="book-info-sm">
+            <div class="book-title-sm">${escHtml(book.title)}</div>
+            <div class="book-author-sm">${escHtml(book.author || '')}</div>
+            ${book.rating ? '<div style="font-size:11px;color:var(--star);">' + '★'.repeat(book.rating) + '</div>' : ''}
+          </div>
+          <div style="flex-shrink:0;font-size:11px;color:${statusColor};white-space:nowrap;">${statusLabel}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // Store colId for delete
+  modal.dataset.colId = colId;
+  modal.classList.add('open');
+}
+
+function closeCollectionDetail() {
+  document.getElementById('collection-detail-modal').classList.remove('open');
+}
+
+async function deleteCollectionFromDetail() {
+  const modal = document.getElementById('collection-detail-modal');
+  const colId = modal.dataset.colId;
+  const col = collections.find(c => c.id === colId);
+  if (!col) return;
+  if (!confirm(`Delete "${col.name}"? Books won't be deleted.`)) return;
+  closeCollectionDetail();
+  try {
+    await fb().deleteDoc(fb().doc(collectionsCol(), colId));
+    showToast(`Collection "${col.name}" deleted`, 'info');
+  } catch(e) {
+    showToast('Error deleting collection', 'error');
+  }
 }
 
 // ---- DASHBOARD ----
