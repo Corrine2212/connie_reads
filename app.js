@@ -61,7 +61,7 @@ async function openScanner() {
   const statusEl = document.getElementById('scanner-status');
   const resultEl = document.getElementById('scanner-result');
   const addBtn = document.getElementById('scanner-add-btn');
-  statusEl.textContent = '📷 Loading barcode reader...';
+  statusEl.textContent = '📷 Starting camera...';
   resultEl.style.display = 'none';
   addBtn.style.display = 'none';
   scannedBookData = null;
@@ -73,39 +73,46 @@ async function openScanner() {
   }
 
   try {
-    // ZXing browser multi-format reader - handles EAN-13 (ISBN barcodes)
-    zxingReader = new ZXing.BrowserMultiFormatReader();
     const video = document.getElementById('scanner-video');
 
-    // Get rear camera on mobile
-    const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
-    const rearCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
-    const deviceId = rearCam?.deviceId;
+    // Use environment-facing camera on mobile (rear camera)
+    const constraints = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    };
 
-    statusEl.textContent = "🔍 Point camera at the ISBN barcode on the book's back cover...";
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    scannerStream = stream;
+    video.srcObject = stream;
+    await video.play();
 
-    await zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
+    statusEl.textContent = '🔍 Point at the barcode on the back cover...';
+
+    // Use ZXing to decode from the already-playing video element
+    zxingReader = new ZXing.BrowserMultiFormatReader();
+    zxingReader.decodeFromVideoElement(video, (result, err) => {
       if (result) {
         const text = result.getText();
-        // Accept EAN-13 (978/979 prefix = book ISBN), EAN-10, or pure numeric 13-digit
         const clean = text.replace(/[^0-9X]/gi, '');
         if (clean.length === 13 || clean.length === 10) {
           handleISBNDetected(clean);
         }
       }
-      // Ignore DecodeHintType errors - they're normal during scanning
     });
-
-    scannerStream = { stop: () => zxingReader.reset() };
 
   } catch(e) {
     console.error('Scanner error:', e);
-    if (e.name === 'NotAllowedError' || e.message?.includes('Permission')) {
-      statusEl.textContent = '🚫 Camera access denied. Please allow camera in your browser settings.';
+    if (e.name === 'NotAllowedError' || (e.message && e.message.includes('ermission'))) {
+      statusEl.textContent = '🚫 Camera access denied — please allow camera in your browser settings.';
     } else if (e.name === 'NotFoundError') {
-      statusEl.textContent = '📷 No camera found. Please use a device with a camera.';
+      statusEl.textContent = '📷 No camera found on this device.';
+    } else if (e.name === 'NotSupportedError') {
+      statusEl.textContent = '❌ Camera not supported on this browser. Try Chrome or Safari.';
     } else {
-      statusEl.textContent = '❌ Camera error: ' + (e.message || 'Unknown error');
+      statusEl.textContent = '❌ Camera error: ' + (e.message || e.name || 'Unknown');
     }
   }
 }
@@ -197,8 +204,12 @@ function addScannedBook() {
 function stopCamera() {
   cancelAnimationFrame(scannerAnimFrame);
   if (zxingReader) { try { zxingReader.reset(); } catch(e){} zxingReader = null; }
-  if (scannerStream && scannerStream.getTracks) {
-    scannerStream.getTracks().forEach(t => t.stop());
+  if (scannerStream) {
+    if (scannerStream.getTracks) {
+      scannerStream.getTracks().forEach(t => t.stop());
+    }
+    const video = document.getElementById('scanner-video');
+    if (video) { video.srcObject = null; }
   }
   scannerStream = null;
 }
