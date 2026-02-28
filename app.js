@@ -79,14 +79,15 @@ async function handleISBNDetected(isbn) {
       const b = hcData?.data?.books?.[0];
       if (b) {
         const ed = b.default_physical_edition;
+        const scanIsbn = ed?.isbn_13 || isbn;
         found = {
           id: String(b.id),
           title: b.title,
           author: (b.contributions||[]).map(c => c.author?.name).filter(Boolean).join(', ') || 'Unknown',
-          genre: '',
+          genre: await fetchGenreFromOL(scanIsbn),
           pages: ed?.pages_count || 0,
           description: b.description || '',
-          isbn: ed?.isbn_13 || isbn,
+          isbn: scanIsbn,
           publisher: ed?.publisher?.name || '',
           coverUrl: b.cached_image?.url || ed?.image?.url || '',
         };
@@ -103,7 +104,7 @@ async function handleISBNDetected(isbn) {
           id: isbn,
           title: olData.title || 'Unknown Title',
           author: 'Unknown',
-          genre: '',
+          genre: pickGenre(olData.subjects || []),
           pages: olData.number_of_pages || 0,
           description: '',
           isbn,
@@ -531,6 +532,15 @@ function openAddModal(prefill = null) {
       document.getElementById('modal-book-author-display').textContent = prefill.author || '';
       document.getElementById('modal-book-desc-display').textContent = prefill.description || '';
     }
+    // Silently fetch genre from Open Library if missing
+    if (!prefill.genre && prefill.isbn) {
+      fetchGenreFromOL(prefill.isbn).then(g => {
+        if (g) {
+          const field = document.getElementById('f-genre');
+          if (field && !field.value) field.value = g;
+        }
+      });
+    }
   }
   renderCollectionCheckboxes([]);
   openModal('book-modal');
@@ -853,6 +863,63 @@ function getBestCoverUrl(item) {
   return '';
 }
 
+// ---- GENRE FETCHING ----
+// Canonical genre list — used to match OL subjects to clean genre names
+const KNOWN_GENRES = [
+  'Fiction','Literary Fiction','Historical Fiction','Science Fiction','Fantasy',
+  'Horror','Thriller','Mystery','Crime','Romance','Contemporary','Adventure',
+  'Dystopia','Magical Realism','Gothic','Humour','Satire',
+  'Non-Fiction','Biography','Autobiography','Memoir','History','True Crime',
+  'Self-Help','Psychology','Philosophy','Science','Nature','Politics','Essays',
+  'Travel','Food','Sports','Art','Music','Business','Technology',
+  'Young Adult','Children','Graphic Novel','Poetry','Short Stories','Classic'
+];
+
+// Pick the best single genre from an array of OL subjects
+function pickGenre(subjects) {
+  if (!subjects || !subjects.length) return '';
+  // Normalise
+  const clean = subjects.map(s => s.replace(/ -- .*/,'').replace(/,.*$/,'').trim());
+  // Try to match a known genre exactly (case-insensitive)
+  for (const s of clean) {
+    const match = KNOWN_GENRES.find(g => g.toLowerCase() === s.toLowerCase());
+    if (match) return match;
+  }
+  // Try partial match
+  for (const s of clean) {
+    const match = KNOWN_GENRES.find(g =>
+      s.toLowerCase().includes(g.toLowerCase()) || g.toLowerCase().includes(s.toLowerCase())
+    );
+    if (match) return match;
+  }
+  // Return first clean subject that isn't too long or generic
+  const firstGood = clean.find(s => s.length > 2 && s.length < 30 &&
+    !['Accessible book','Protected DAISY','Open Library','English','American'].includes(s));
+  return firstGood || '';
+}
+
+// Fetch genre from Open Library for a given ISBN
+async function fetchGenreFromOL(isbn) {
+  if (!isbn) return '';
+  try {
+    const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
+    if (!res.ok) return '';
+    const data = await res.json();
+    // Try works endpoint for richer subjects
+    if (data.works?.[0]?.key) {
+      const wRes = await fetch(`https://openlibrary.org${data.works[0].key}.json`);
+      if (wRes.ok) {
+        const wData = await wRes.json();
+        const subjects = (wData.subjects || []).concat(wData.subject_places || []).concat(wData.subject_times || []);
+        const genre = pickGenre(subjects);
+        if (genre) return genre;
+      }
+    }
+    // Fall back to edition subjects
+    return pickGenre(data.subjects || []);
+  } catch { return ''; }
+}
+
 // ---- HARDCOVER API SEARCH ----
 // Hardcover is a free book community API - no key needed for public search
 async function searchHardcover(q) {
@@ -876,7 +943,7 @@ async function searchHardcover(q) {
   });
   if (!res.ok) throw new Error('Hardcover API error ' + res.status);
   const data = await res.json();
-  return (data.data?.books || []).map(b => {
+  const rawBooks = (data.data?.books || []).map(b => {
     const ed = b.default_physical_edition;
     const author = (b.contributions||[]).map(c => c.author?.name).filter(Boolean).join(', ') || 'Unknown';
     const coverUrl = b.cached_image?.url || ed?.image?.url || '';
@@ -893,6 +960,13 @@ async function searchHardcover(q) {
       source: 'hardcover',
     };
   });
+  // Fetch genres from Open Library for first 5 results (avoid flooding OL)
+  for (const book of rawBooks.slice(0, 5)) {
+    if (book.isbn && !book.genre) {
+      book.genre = await fetchGenreFromOL(book.isbn);
+    }
+  }
+  return rawBooks;
 }
 
 // Open Library search fallback
@@ -909,7 +983,7 @@ async function searchOpenLibrary(q) {
       id: doc.key || isbn,
       title: doc.title || 'Unknown Title',
       author: (doc.author_name || []).join(', ') || 'Unknown',
-      genre: (doc.subject || []).slice(0, 2).join(', '),
+      genre: pickGenre(doc.subject || []),
       pages: doc.number_of_pages_median || 0,
       description: '',
       isbn,
