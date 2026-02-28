@@ -1337,9 +1337,9 @@ function openBookDetail(bookId) {
   ].filter(Boolean).join(' &nbsp;·&nbsp; ');
 
   document.getElementById('book-detail-body').innerHTML = `
-    <div style="display:flex; gap:22px; margin-bottom:24px;">
-      <div style="width:100px;height:150px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-elevated);box-shadow:4px 4px 16px rgba(0,0,0,0.35);">${coverHtml}</div>
-      <div>
+    <div style="display:flex;gap:16px;margin-bottom:20px;min-width:0;overflow:hidden;">
+      <div style="width:90px;min-width:90px;height:135px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-elevated);box-shadow:3px 3px 12px rgba(0,0,0,0.35);">${coverHtml}</div>
+      <div style="flex:1;min-width:0;overflow:hidden;">
         <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">${escHtml(book.title)}</div>
         <div style="font-family:'Lora',serif;font-size:14px;font-style:italic;color:var(--text-secondary);margin-bottom:10px;">${escHtml(book.author)}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
@@ -1457,10 +1457,9 @@ function refreshDashboard() {
   if (reading.length) {
     crList.innerHTML = reading.map(book => {
       const progress = book.pages && book.pagesRead ? Math.round((book.pagesRead / book.pages) * 100) : 0;
-      const cover = `<div class="book-cover-sm">${bookCoverImg(book)}</div>`;
       return `
         <div class="book-item-horizontal" onclick="openBookDetail('${book.id}')" style="cursor:pointer;">
-          ${cover}
+          <div class="book-cover-sm">${bookCoverImg(book)}</div>
           <div class="book-info-sm">
             <div class="book-title-sm">${escHtml(book.title)}</div>
             <div class="book-author-sm">${escHtml(book.author)}</div>
@@ -1469,8 +1468,7 @@ function refreshDashboard() {
               <span class="reading-pct">${progress ? progress+'%' : 'In Progress'}</span>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
   } else {
     crList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">No books in progress. Start reading!</div>';
@@ -1481,13 +1479,11 @@ function refreshDashboard() {
   document.getElementById('want-count').textContent = `${want.length} book${want.length !== 1 ? 's' : ''}`;
   if (want.length) {
     wantList.innerHTML = want.slice(0, 5).map(book => `
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;" onclick="openBookDetail('${book.id}')">
-        <div style="width:28px;height:42px;border-radius:3px;overflow:hidden;flex-shrink:0;">
-          ${bookCoverImg(book)}
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(book.title)}</div>
-          <div style="font-size:11px;color:var(--text-muted);">${escHtml(book.author)}</div>
+      <div class="book-item-horizontal" onclick="openBookDetail('${book.id}')" style="cursor:pointer;padding:8px 0;">
+        <div class="book-cover-sm" style="width:36px;height:54px;font-size:14px;">${bookCoverImg(book)}</div>
+        <div class="book-info-sm">
+          <div class="book-title-sm" style="font-size:13px;">${escHtml(book.title)}</div>
+          <div class="book-author-sm" style="font-size:11px;">${escHtml(book.author)}</div>
         </div>
       </div>
     `).join('');
@@ -1512,6 +1508,9 @@ function refreshDashboard() {
   // Collections in dashboard
   const dashCols = document.getElementById('dash-collections');
   if (collections.length) {
+    dashCols.style.display = 'flex';
+    dashCols.style.flexWrap = 'wrap';
+    dashCols.style.gap = '4px';
     dashCols.innerHTML = collections.map(col => {
       const count = books.filter(b => (b.collections || []).includes(col.id)).length;
       return `<div class="collection-pill" onclick="showPage('collections')">${col.emoji} ${escHtml(col.name)} <span class="pill-count">${count}</span></div>`;
