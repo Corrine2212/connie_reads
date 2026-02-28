@@ -395,7 +395,7 @@ a { color: inherit; text-decoration: none; }
 .btn svg { width: 15px; height: 15px; }
 
 .page-content {
-  padding: 32px;
+  padding: 0;
   flex: 1;
   width: 100%;
   max-width: 100%;
@@ -408,11 +408,30 @@ a { color: inherit; text-decoration: none; }
 /* ========== PAGES ========== */
 .page { display: none; animation: fadeIn 0.25s ease; }
 .page.active { display: block; }
+
+/* Pages that need side padding (non-dashboard) */
+#page-search,
+#page-stats,
+#page-settings,
+#page-collections {
+  padding: 28px 32px 40px;
+}
+
+/* Library page: compact top padding, cards stretch full width */
+#page-library {
+  padding: 16px 20px 40px;
+}
+
+/* Dashboard: top padding only, cards go edge-to-edge */
+#page-dashboard {
+  padding-top: 24px;
+}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ========== DASHBOARD ========== */
 .greeting {
-  margin-bottom: 32px;
+  padding: 0 32px;
+  margin-bottom: 24px;
 }
 .greeting-sub {
   font-size: 13px;
@@ -423,7 +442,7 @@ a { color: inherit; text-decoration: none; }
 }
 .greeting h1 {
   font-family: 'Playfair Display', serif;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
@@ -963,10 +982,15 @@ a { color: inherit; text-decoration: none; }
 .streak-day.read { background: var(--green); }
 .streak-day.partial { background: var(--accent); opacity: 0.5; }
 
-/* ========== SEARCH PAGE ========== */
+/* ========== SEARCH / DISCOVER PAGE ========== */
+.discover-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
 .search-hero {
   text-align: center;
-  padding: 40px 20px 32px;
+  padding: 40px 20px 24px;
 }
 .search-hero h2 {
   font-family: 'Playfair Display', serif;
@@ -984,7 +1008,7 @@ a { color: inherit; text-decoration: none; }
   border-radius: 28px;
   border: 1px solid var(--border);
   overflow: hidden;
-  max-width: 600px;
+  max-width: 640px;
   margin: 0 auto;
   height: 52px;
 }
@@ -1016,10 +1040,11 @@ a { color: inherit; text-decoration: none; }
 }
 .search-results {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 20px;
-  margin-top: 32px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
 }
+
 .search-result-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -1512,12 +1537,19 @@ input[type="date"].form-input {
 /* ========== DASHBOARD CARDS ========== */
 .dash-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 16px;
-  margin-bottom: 12px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  padding: 20px 32px;
+  margin-bottom: 0;
   min-width: 0;
   overflow: hidden;
+  width: 100%;
+}
+.dash-card + .dash-card {
+  border-top: none;
 }
 .dash-card-head {
   display: flex;
@@ -1567,16 +1599,12 @@ input[type="date"].form-input {
 
 /* ========== DASHBOARD LAYOUT ========== */
 .dash-main {
-  /* Mobile: single column stack */
   display: block;
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
 }
-.dash-main-left {
-  /* Flex column, all cards stack */
-}
-.dash-main-right {
-  /* Empty on mobile; desktop puts things here via JS or CSS columns */
-  display: none;
-}
+.dash-main-left {}
+.dash-main-right { display: none; }
 
 /* ========== STATS OVERVIEW (2x2 grid) ========== */
 .stats-row {
@@ -1584,6 +1612,7 @@ input[type="date"].form-input {
   grid-template-columns: 1fr 1fr;  /* mobile: 2x2 */
   gap: 8px;
   margin-bottom: 12px;
+  padding: 0 32px;
 }
 .stat-card {
   background: var(--bg-card);
@@ -1875,6 +1904,7 @@ input[type="date"].form-input {
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 12px;
+  justify-content: center;
 }
 
 /* ========== COLLECTIONS PAGE ========== */
@@ -1892,17 +1922,21 @@ input[type="date"].form-input {
   #mobile-nav { display: none !important; }
   #sidebar-toggle { display: none; }
   #main { margin-left: 240px; }
-  .page-content { padding: 32px; }
+  /* page-content has no padding — each page handles its own */
 
   /* Desktop 4-col stats */
-  .stats-row { grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stats-row { grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; padding: 0 32px; }
   .stat-card { padding: 20px; }
   .stat-value { font-size: 32px; }
   .stat-icon { width: 36px; height: 36px; font-size: 18px; margin-bottom: 14px; }
   .stat-change { display: block; }
 
-  /* Dashboard two-col layout on desktop only */
-  #page-dashboard .dash-main { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+  /* Dashboard cards go edge-to-edge, generous internal padding */
+  .dash-card { padding: 22px 40px; }
+  .greeting { padding: 0 40px; margin-bottom: 20px; }
+
+  /* Dashboard: single col stack (two-col needs JS rework, keep simple) */
+  #page-dashboard .dash-main { display: block; }
 
   /* Stats two-col */
   .stats-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -1921,12 +1955,29 @@ input[type="date"].form-input {
   #main { margin-left: 0; width: 100%; }
   #mobile-nav { display: block; }
 
-  .page-content {
+  /* On mobile all pages use simple padding */
+  #page-search,
+  #page-stats,
+  #page-settings,
+  #page-collections {
     padding: 14px 14px calc(76px + env(safe-area-inset-bottom));
-    overflow-x: hidden;
-    box-sizing: border-box;
-    width: 100%;
   }
+  #page-library {
+    padding: 12px 12px calc(76px + env(safe-area-inset-bottom));
+  }
+  #page-dashboard {
+    padding-top: 12px;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+  /* Dashboard mobile: cards go edge-to-edge (no side padding on card, use border-radius) */
+  .dash-card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 14px 16px;
+  }
+  .greeting { padding: 0 14px; margin-bottom: 12px; }
+  .stats-row { padding: 0 14px; }
 
   /* Stats 2x2 */
   .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -1957,9 +2008,22 @@ input[type="date"].form-input {
 
 /* ========== RESPONSIVE: PHONE (≤480px) ========== */
 @media (max-width: 480px) {
-  .page-content {
+  #page-search,
+  #page-stats,
+  #page-settings,
+  #page-collections {
     padding: 10px 12px calc(80px + env(safe-area-inset-bottom));
   }
+  #page-library {
+    padding: 10px 10px calc(80px + env(safe-area-inset-bottom));
+  }
+  #page-dashboard {
+    padding-top: 10px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+  .dash-card { padding: 12px 14px; }
+  .greeting { padding: 0 12px; }
+  .stats-row { padding: 0 12px; gap: 7px; margin-bottom: 8px; }
 
   /* Top bar */
   .top-bar { padding: 8px 12px; gap: 8px; }
