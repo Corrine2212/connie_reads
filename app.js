@@ -1654,7 +1654,7 @@ function renderStats() {
   document.getElementById('s-avg-rating').textContent = rated.length 
     ? (rated.reduce((s,b) => s + b.rating, 0) / rated.length).toFixed(1) + '★'
     : '—';
-  const genres = new Set(readBooks.map(b => b.genre).filter(Boolean));
+  const genres = new Set(allBooks.map(b => b.genre).filter(Boolean));
   document.getElementById('s-genres').textContent = genres.size;
 
   // ---- Year chart ----
@@ -1664,9 +1664,18 @@ function renderStats() {
   readBooks.forEach(b => {
     if (b.dateRead) {
       const y = parseInt(b.dateRead.substring(0, 4));
-      if (yearCounts[y] !== undefined) yearCounts[y]++;
+      if (!isNaN(y) && yearCounts[y] !== undefined) yearCounts[y]++;
     }
   });
+  // If no yearCounts have data, expand range to show all years with data
+  if (Object.values(yearCounts).every(v => v === 0)) {
+    readBooks.forEach(b => {
+      if (b.dateRead) {
+        const y = parseInt(b.dateRead.substring(0, 4));
+        if (!isNaN(y) && y > 2000 && y <= curYear) yearCounts[y] = (yearCounts[y] || 0) + 1;
+      }
+    });
+  }
   const maxYear = Math.max(...Object.values(yearCounts), 1);
   document.getElementById('year-chart').innerHTML = Object.entries(yearCounts).map(([y, c]) => `
     <div class="year-bar-wrap">
@@ -1694,7 +1703,8 @@ function renderStats() {
 
   // ---- Genre chart ----
   const genreCount = {};
-  readBooks.forEach(b => { if (b.genre) genreCount[b.genre] = (genreCount[b.genre]||0) + 1; });
+  // Count genres from all books, not just read ones — Goodreads imports have genres on all statuses
+  allBooks.forEach(b => { if (b.genre) genreCount[b.genre] = (genreCount[b.genre]||0) + 1; });
   const topGenres = Object.entries(genreCount).sort((a,b) => b[1]-a[1]).slice(0,6);
   const maxGenre = topGenres[0]?.[1] || 1;
   const genreColors = ['var(--accent)','var(--green)','var(--blue)','var(--purple)','var(--red)','var(--star)'];
@@ -1708,20 +1718,7 @@ function renderStats() {
       `).join('')
     : '<div style="color:var(--text-muted);font-size:13px;">Add genres to see stats</div>';
 
-  // ---- Top Authors (most read) ----
-  const authorCount = {};
-  readBooks.forEach(b => { if (b.author) authorCount[b.author] = (authorCount[b.author]||0) + 1; });
-  const topAuthors = Object.entries(authorCount).sort((a,b) => b[1]-a[1]).slice(0,5);
-  const rankLabels = ['gold','silver','bronze','',''];
-  document.getElementById('authors-list').innerHTML = topAuthors.length 
-    ? topAuthors.map(([a, c], i) => `
-        <div class="top-item">
-          <div class="top-rank ${rankLabels[i]}">${i+1}</div>
-          <div class="top-info"><div class="top-name">${escHtml(a)}</div><div class="top-sub">Author</div></div>
-          <div class="top-val">${c} book${c!==1?'s':''}</div>
-        </div>
-      `).join('')
-    : '<div style="color:var(--text-muted);font-size:13px;">No books marked as read yet</div>';
+  // (top authors rendered in the detailed section below)
 
   // ---- Rating distribution ----
   const ratingDist = [0,0,0,0,0];
@@ -1891,18 +1888,52 @@ function importGoodreads(event) {
         const rating = parseInt(row['My Rating'] || row['rating']) || 0;
         // Goodreads shelves → tags (not genre)
         const rawShelves = row['Bookshelves'] || row['Bookshelves with positions'] || '';
+        // Known genre-like shelf names → map to genre field
+        const GENRE_SHELVES = ['fiction','non-fiction','nonfiction','fantasy','sci-fi','science-fiction',
+          'mystery','thriller','romance','horror','biography','memoir','history','historical-fiction',
+          'literary-fiction','young-adult','ya','children','graphic-novel','comics','poetry','self-help',
+          'psychology','philosophy','classics','crime','adventure','dystopia','contemporary','lgbtq',
+          'lgbtq+','queer','short-stories'];
+        const shelfList = rawShelves.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+        const genreShelf = shelfList.find(s => GENRE_SHELVES.includes(s));
+        // Capitalise genre shelf name nicely
+        const genreFromShelf = genreShelf
+          ? genreShelf.replace(/-/g, ' ').replace(/\w/g, c => c.toUpperCase())
+          : (row['Genre'] || row['genre'] || '');
+        // Remaining non-genre shelves become tags
         const grTags = rawShelves.split(',').map(s => s.trim())
-          .filter(s => s && !['read','currently-reading','to-read'].includes(s.toLowerCase()));
+          .filter(s => s && !['read','currently-reading','to-read'].includes(s.toLowerCase())
+            && s.toLowerCase() !== genreShelf);
+        // Normalise Goodreads date format: "2024/01/15" or "Jan 15, 2024" → "YYYY-MM-DD"
+        const normDate = (raw) => {
+          if (!raw || !raw.trim()) return '';
+          const d = raw.trim();
+          // Already YYYY-MM-DD
+          if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+          // Goodreads: YYYY/MM/DD
+          if (/^\d{4}\/\d{2}\/\d{2}$/.test(d)) return d.replace(/\//g, '-');
+          // Goodreads sometimes: YYYY/MM or YYYY
+          if (/^\d{4}\/\d{2}$/.test(d)) return d.replace('/', '-') + '-01';
+          if (/^\d{4}$/.test(d)) return d + '-01-01';
+          // Try native Date parse as fallback
+          try {
+            const parsed = new Date(d);
+            if (!isNaN(parsed)) return parsed.toISOString().substring(0, 10);
+          } catch(e) {}
+          return '';
+        };
         if (!books.find(b => b.title.toLowerCase() === title.toLowerCase())) {
           const book = {
             id: genId(),
             title: title.trim(),
-            author: (author || 'Unknown').replace(/,\s*(\w+)\s*$/, ' $1').trim(),
-            genre: '',
+            // Goodreads stores "Last, First" — convert to "First Last"
+            author: (author || 'Unknown').replace(/^([^,]+),\s*(.+)$/, '$2 $1').trim(),
+            genre: genreFromShelf,
             tags: grTags,
             status, rating,
-            dateRead: row['Date Read'] || '',
-            pages: parseInt(row['Number of Pages'] || row['pages']) || 0,
+            dateRead: normDate(row['Date Read'] || ''),
+            dateStarted: normDate(row['Date Started'] || ''),
+            pages: parseInt(row['Number of Pages'] || row['# Pages'] || row['pages']) || 0,
             notes: row['My Review'] || '',
             dateAdded: Date.now(),
             collections: [],
