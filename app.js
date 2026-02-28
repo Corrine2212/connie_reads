@@ -249,6 +249,7 @@ function subscribeToData() {
   unsubscribeBooks = fb().onSnapshot(booksCol(), snap => {
     books = snap.docs.map(d => ({ ...d.data(), id: d.id }));
     books.sort((a,b) => (b.dateAdded||0) - (a.dateAdded||0));
+    _filterOptsDirty = true;
     // Only re-render library if it's visible
     if (document.getElementById('page-library')?.classList.contains('active')) {
       renderLibrary();
@@ -1032,14 +1033,19 @@ function bookCoverImg(book, fallbackSizeClass = '') {
 
 // ---- RENDER BOOK CARD ----
 let _renderLibTimer = null;
+let _filterOptsDirty = true; // set true when books change
 function renderLibrary() {
   // Debounce rapid calls (e.g. realtime Firestore updates)
   clearTimeout(_renderLibTimer);
   _renderLibTimer = setTimeout(_doRenderLibrary, 50);
 }
 function _doRenderLibrary() {
-  buildFilterOptions();
-  updateOwnedCounts();
+  // Only rebuild filter options if books changed (not on search/sort)
+  if (_filterOptsDirty) {
+    buildFilterOptions();
+    updateOwnedCounts();
+    _filterOptsDirty = false;
+  }
 
   const searchQ = (document.getElementById('lib-search')?.value || '').toLowerCase().trim();
 
@@ -1089,13 +1095,12 @@ function _doRenderLibrary() {
   grid.style.display = '';
   empty.style.display = 'none';
 
-  if (currentView === 'grid') {
-    grid.className = 'books-grid';
-    grid.innerHTML = filtered.map((book, i) => renderBookCard(book, i)).join('');
-  } else {
-    grid.className = 'books-list';
-    grid.innerHTML = filtered.map((book, i) => renderBookListItem(book, i)).join('');
-  }
+  const html = currentView === 'grid'
+    ? filtered.map((book, i) => renderBookCard(book, i)).join('')
+    : filtered.map((book, i) => renderBookListItem(book, i)).join('');
+  grid.className = currentView === 'grid' ? 'books-grid' : 'books-list';
+  // Use requestAnimationFrame to avoid blocking the main thread
+  requestAnimationFrame(() => { grid.innerHTML = html; });
 }
 
 function buildFilterOptions() {
@@ -1210,7 +1215,7 @@ function setOwnershipFilter(own) {
     b.classList.toggle('active', fp.ownership.includes(b.dataset.own));
   });
   // Update owned bar active states
-  document.querySelectorAll('.owned-badge').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.own-pill').forEach(b => b.classList.remove('active'));
   const target = document.getElementById('ob-' + own);
   if (target) target.classList.add('active');
   if (own === 'all') document.getElementById('ob-all')?.classList.add('active');
@@ -1254,7 +1259,7 @@ function clearAllFilters() {
   if (si) si.value = '';
   document.querySelectorAll('#filter-panel .filter-chip-sm').forEach(b => b.classList.remove('active'));
   document.querySelector('#fp-status [data-status="all"]')?.classList.add('active');
-  document.querySelectorAll('.owned-badge').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.own-pill').forEach(b => b.classList.remove('active'));
   document.getElementById('ob-all')?.classList.add('active');
   renderLibrary();
 }
@@ -1439,7 +1444,7 @@ function refreshDashboard() {
     const pct = Math.min(100, Math.round((readThisYear.length / goal) * 100));
     document.getElementById('stat-goal-pct').textContent = pct + '%';
     document.getElementById('stat-goal-detail').textContent = `${readThisYear.length}/${goal} books`;
-    document.getElementById('goal-title-text').textContent = `Reading Goal ${year}`;
+    // goal-title-text removed (merged into header)
     document.getElementById('goal-count-text').innerHTML = `${readThisYear.length} <span>/ ${goal}</span>`;
     document.getElementById('goal-progress-fill').style.width = pct + '%';
     const remaining = goal - readThisYear.length;
@@ -1714,10 +1719,9 @@ function renderStats() {
 
 // ---- SETTINGS ----
 function showSettingsPanel(id, el) {
-  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.settings-nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('sp-' + id).classList.add('active');
-  el.classList.add('active');
+  // Settings is now a single scroll page - scroll to section
+  const block = document.getElementById('sp-' + id);
+  if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
   if (id === 'appearance') {
     // Highlight active theme swatch
     document.querySelectorAll('.theme-swatch').forEach(s => {

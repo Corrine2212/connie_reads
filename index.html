@@ -3,84 +3,45 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <meta name="description" content="ConnieReads - Your personal book tracker"/>
   <meta name="theme-color" content="#1a1612"/>
   <title>ConnieReads</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="app.css"/>
-  <!-- Firebase SDK (must be module) -->
   <script type="module" src="firebase.js"></script>
 </head>
 <body>
 
-<!-- ===== AUTH SCREEN ===== -->
+<!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">
-      <div class="auth-logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="28" height="28">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          <path d="M9 7h7M9 10h5" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <div class="auth-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="28" height="28"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 10h5" stroke-linecap="round"/></svg></div>
       <div class="auth-logo-name">Connie<span>Reads</span></div>
       <div class="auth-logo-sub">Your personal reading library</div>
     </div>
-
-    <div class="auth-loading show" id="auth-loading">
-      <div class="spin"></div> Loading...
-    </div>
-
+    <div class="auth-loading show" id="auth-loading"><div class="spin"></div> Loading...</div>
     <div id="auth-forms" style="display:none;">
       <div class="auth-tabs">
         <div class="auth-tab active" onclick="switchAuthTab('signin')">Sign In</div>
         <div class="auth-tab" onclick="switchAuthTab('signup')">Create Account</div>
       </div>
-
-      <!-- Sign In -->
       <div class="auth-form active" id="auth-signin">
-        <button class="btn-google" onclick="authWithGoogle()">
-          <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          Continue with Google
-        </button>
+        <button class="btn-google" onclick="authWithGoogle()"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Continue with Google</button>
         <div class="auth-divider">or sign in with email</div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" class="form-input" id="signin-email" placeholder="you@example.com" autocomplete="email"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" class="form-input" id="signin-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSignIn()"/>
-        </div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="signin-email" placeholder="you@example.com" autocomplete="email"/></div>
+        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="signin-password" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSignIn()"/></div>
         <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="authSignIn()">Sign In</button>
-        <div style="text-align:center;margin-top:12px;">
-          <button style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer;text-decoration:underline;" onclick="authForgotPassword()">Forgot password?</button>
-        </div>
+        <div style="text-align:center;margin-top:12px;"><button style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer;text-decoration:underline;" onclick="authForgotPassword()">Forgot password?</button></div>
         <div class="auth-error" id="signin-error"></div>
       </div>
-
-      <!-- Sign Up -->
       <div class="auth-form" id="auth-signup">
-        <button class="btn-google" onclick="authWithGoogle()">
-          <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          Sign up with Google
-        </button>
+        <button class="btn-google" onclick="authWithGoogle()"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Sign up with Google</button>
         <div class="auth-divider">or create account</div>
-        <div class="form-group">
-          <label class="form-label">Display Name</label>
-          <input type="text" class="form-input" id="signup-name" placeholder="Connie"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" class="form-input" id="signup-email" placeholder="you@example.com" autocomplete="email"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" class="form-input" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSignUp()"/>
-        </div>
+        <div class="form-group"><label class="form-label">Display Name</label><input type="text" class="form-input" id="signup-name" placeholder="Connie"/></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="signup-email" placeholder="you@example.com" autocomplete="email"/></div>
+        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSignUp()"/></div>
         <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="authSignUp()">Create Account</button>
         <div class="auth-error" id="signup-error"></div>
       </div>
@@ -88,205 +49,136 @@
   </div>
 </div>
 
+<!-- APP -->
 <div id="app">
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR: desktop only -->
   <aside id="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="20" height="20">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          <path d="M9 7h7M9 10h5" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="20" height="20"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 10h5" stroke-linecap="round"/></svg></div>
       <span class="logo-text">Connie<span>Reads</span></span>
     </div>
-
     <div class="sidebar-section-label">Navigation</div>
     <nav>
-      <div class="nav-item active" onclick="showPage('dashboard')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Dashboard
-      </div>
-      <div class="nav-item" onclick="showPage('search')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
-        Discover
-      </div>
-      <div class="nav-item" onclick="showPage('library')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        My Library
-        <span class="nav-badge" id="lib-count">0</span>
-      </div>
-      <div class="nav-item" onclick="showPage('collections')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-        Collections
-      </div>
+      <div class="nav-item active" onclick="showPage('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</div>
+      <div class="nav-item" onclick="showPage('search')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>Discover</div>
+      <div class="nav-item" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>My Library <span class="nav-badge" id="lib-count">0</span></div>
+      <div class="nav-item" onclick="showPage('collections')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Collections</div>
+      <div class="nav-item" onclick="showPage('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Statistics</div>
+      <div class="nav-item" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
     </nav>
-
-    <div class="sidebar-section-label">Insights</div>
-    <nav>
-      <div class="nav-item" onclick="showPage('stats')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Statistics
-      </div>
-      <div class="nav-item" onclick="showPage('settings')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Settings
-      </div>
-    </nav>
-
     <div class="sidebar-footer">
       <div id="user-profile-area" class="user-profile" style="margin-bottom:10px;">
         <div class="user-avatar" id="user-avatar">?</div>
         <div class="user-name" id="user-display-name">Loading...</div>
         <div class="sync-dot" id="sync-dot" title="Synced to cloud"></div>
       </div>
-      <button class="btn btn-ghost" style="width:100%; justify-content:center; font-size:12px; color:var(--red); padding:7px;" onclick="authSignOut()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Sign Out
-      </button>
-      <button class="theme-toggle" onclick="toggleTheme()" style="margin-top:8px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        Light Mode
-        <div class="toggle-switch" id="theme-switch"></div>
-      </button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px;color:var(--red);padding:7px;" onclick="authSignOut()">Sign Out</button>
     </div>
   </aside>
 
   <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
-  <!-- MAIN -->
   <main id="main">
     <div class="top-bar">
-      <button id="sidebar-toggle" onclick="toggleSidebar()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-      <span class="top-bar-title" id="page-title">Dashboard</span>
-      <div style="margin-left:auto; display:flex; gap:8px;" id="top-actions">
-
+      <span class="top-bar-title" id="page-title">Home</span>
+      <div style="margin-left:auto;display:flex;gap:8px;" id="top-actions">
         <button class="btn btn-primary" onclick="openAddModal()" id="add-book-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Book
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span class="btn-label">Add Book</span>
         </button>
       </div>
     </div>
 
     <div class="page-content">
 
-      <!-- ===== DASHBOARD PAGE ===== -->
+      <!-- ===== DASHBOARD ===== -->
       <div class="page active" id="page-dashboard">
         <div class="greeting">
-          <div class="greeting-sub">📖 Good reading,</div>
+          <div class="greeting-sub">&#128214; Good reading,</div>
           <h1>Welcome to your <span>library</span></h1>
         </div>
 
         <div class="stats-row">
           <div class="stat-card">
-            <div class="stat-icon" style="background:var(--accent-soft);">📚</div>
+            <div class="stat-icon" style="background:var(--accent-soft);">&#128218;</div>
             <div class="stat-value" id="stat-total">0</div>
-            <div class="stat-label">Books in Library</div>
-            <div class="stat-change neutral">Total collection</div>
+            <div class="stat-label">Total</div>
+            <div class="stat-change neutral">collection</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon" style="background:var(--green-soft);">✅</div>
+            <div class="stat-icon" style="background:var(--green-soft);">&#9989;</div>
             <div class="stat-value" id="stat-read">0</div>
-            <div class="stat-label">Books Read</div>
+            <div class="stat-label">Read</div>
             <div class="stat-change up" id="stat-read-year">this year</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon" style="background:var(--blue-soft);">📖</div>
+            <div class="stat-icon" style="background:var(--blue-soft);">&#128214;</div>
             <div class="stat-value" id="stat-reading">0</div>
-            <div class="stat-label">Currently Reading</div>
+            <div class="stat-label">Reading</div>
             <div class="stat-change neutral">in progress</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon" style="background:var(--purple-soft);">🎯</div>
-            <div class="stat-value" id="stat-goal-pct">0%</div>
-            <div class="stat-label">Goal Progress</div>
+            <div class="stat-icon" style="background:var(--purple-soft);">&#127919;</div>
+            <div class="stat-value" id="stat-goal-pct">&#8212;</div>
+            <div class="stat-label">Goal</div>
             <div class="stat-change neutral" id="stat-goal-detail">set a goal</div>
           </div>
         </div>
 
-        <div class="dashboard-grid">
-          <div>
-            <!-- Goal Progress -->
-            <div class="goal-card" id="dash-goal-card">
-              <div class="goal-header">
-                <div>
-                  <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Reading Goal <span id="goal-year"></span></div>
-                  <div class="goal-title" id="goal-title-text">Set your reading goal</div>
-                </div>
-                <div class="goal-count" id="goal-count-text">0 <span>/ 0</span></div>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill" id="goal-progress-fill" style="width:0%"></div>
-              </div>
-              <div class="goal-meta" id="goal-meta-text">Set a goal in Settings to track your progress</div>
-            </div>
-
-            <!-- Currently Reading -->
-            <div class="current-reading">
-              <div class="section-header">
-                <div class="section-title">Currently Reading</div>
-                <button class="btn btn-ghost" style="font-size:12px;" onclick="showPage('library')">View all →</button>
-              </div>
-              <div id="currently-reading-list">
-                <div class="empty-state" style="padding:30px 20px;">
-                  <p style="font-size:13px;">No books in progress. Start reading!</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="panel-card">
-              <div class="section-header">
-                <div class="section-title">Recent Activity</div>
-              </div>
-              <div class="activity-list" id="activity-list">
-                <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">No activity yet. Add some books!</div>
-              </div>
-            </div>
+        <!-- dash-main: single col on mobile, two-col on desktop -->
+        <div class="dash-main">
+        <div class="dash-main-left">
+        <div class="dash-card">
+          <div class="dash-card-head">
+            <div class="dash-card-title">Reading Goal <span id="goal-year"></span></div>
+            <span class="goal-count-text" id="goal-count-text">0 <span>/ 0</span></span>
           </div>
-
-          <div>
-            <!-- Quick Collections -->
-            <div class="panel-card">
-              <div class="section-header">
-                <div class="section-title">Collections</div>
-                <button class="btn btn-ghost" style="font-size:12px;" onclick="showPage('collections')">Manage →</button>
-              </div>
-              <div id="dash-collections">
-                <div style="font-size:13px; color:var(--text-muted);">No collections yet</div>
-              </div>
-            </div>
-
-            <!-- Want to Read -->
-            <div class="panel-card">
-              <div class="section-header">
-                <div class="section-title">Want to Read</div>
-                <span style="font-size:12px; color:var(--text-muted);" id="want-count">0 books</span>
-              </div>
-              <div id="want-to-read-list">
-                <div style="font-size:13px; color:var(--text-muted);">Your wish list is empty</div>
-              </div>
-            </div>
-          </div>
+          <div class="progress-track"><div class="progress-fill" id="goal-progress-fill" style="width:0%"></div></div>
+          <div class="goal-meta" id="goal-meta-text">Set a goal in Settings to track progress</div>
         </div>
-      </div>
 
-      <!-- ===== SEARCH / DISCOVER PAGE ===== -->
+        <div class="dash-card">
+          <div class="dash-card-head">
+            <div class="dash-card-title">Currently Reading</div>
+            <button class="dash-link" onclick="showPage('library')">View all</button>
+          </div>
+          <div id="currently-reading-list"><div class="dash-empty">No books in progress. Start reading!</div></div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-head">
+            <div class="dash-card-title">Want to Read</div>
+            <span class="dash-muted" id="want-count">0 books</span>
+          </div>
+          <div id="want-to-read-list"><div class="dash-empty">Your wish list is empty</div></div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-head">
+            <div class="dash-card-title">Collections</div>
+            <button class="dash-link" onclick="showPage('collections')">Manage</button>
+          </div>
+          <div id="dash-collections"><div class="dash-empty">No collections yet</div></div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-head"><div class="dash-card-title">Recent Activity</div></div>
+          <div class="activity-list" id="activity-list"><div class="dash-empty">No activity yet. Add some books!</div></div>
+        </div>
+        </div><!-- /dash-main-left -->
+        </div><!-- /dash-main -->
+      </div><!-- /page-dashboard -->
+
+      <!-- ===== DISCOVER ===== -->
       <div class="page" id="page-search">
         <div class="search-hero">
-          <h2>Discover Your Next Read</h2>
-          <p>Search millions of books and add them to your library</p>
+          <h2>Discover</h2>
           <div class="search-hero-bar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
-            <input type="text" id="discover-search" placeholder="Search by title, author, ISBN..." 
-              onkeydown="if(event.key==='Enter'){event.preventDefault();searchBooks();}" 
-              autocomplete="off" autocorrect="off" spellcheck="false"/>
-            <button onclick="searchBooks()" style="background:var(--accent);border:none;border-radius:0 24px 24px 0;padding:0 18px;color:white;font-size:13px;font-weight:500;cursor:pointer;flex-shrink:0;height:100%;">Search</button>
+            <input type="text" id="discover-search" placeholder="Title, author or ISBN&#x2026;" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBooks();}" autocomplete="off" autocorrect="off" spellcheck="false"/>
+            <button onclick="searchBooks()">Search</button>
           </div>
-          <div style="display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
+          <div class="genre-chips">
             <button class="filter-chip" onclick="searchBooks('fantasy')">Fantasy</button>
             <button class="filter-chip" onclick="searchBooks('horror')">Horror</button>
             <button class="filter-chip" onclick="searchBooks('romance')">Romance</button>
@@ -298,376 +190,198 @@
         <div id="search-results-grid" class="search-results"></div>
       </div>
 
-      <!-- ===== LIBRARY PAGE ===== -->
+      <!-- ===== LIBRARY ===== -->
       <div class="page" id="page-library">
-
-        <!-- Owned counts bar -->
-        <div class="owned-count-bar" id="owned-count-bar">
-          <div class="owned-badge" id="ob-all" onclick="setOwnershipFilter('all')" title="All books">
-            <span class="owned-badge-icon">📚</span>
-            <div><div class="owned-badge-count" id="ob-all-count">0</div><div class="owned-badge-label">All Books</div></div>
+        <!-- Compact single-row bar: search + sort + filter btn + view -->
+        <div class="lib-bar">
+          <div class="lib-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
+            <input type="text" id="lib-search" placeholder="Search library&#x2026;" oninput="renderLibrary()" autocomplete="off"/>
           </div>
-          <div class="owned-badge" id="ob-physical" onclick="setOwnershipFilter('physical')" title="Physical copies owned">
-            <span class="owned-badge-icon">📖</span>
-            <div><div class="owned-badge-count" id="ob-physical-count">0</div><div class="owned-badge-label">Physical</div></div>
-          </div>
-          <div class="owned-badge" id="ob-digital" onclick="setOwnershipFilter('digital')" title="Digital copies owned">
-            <span class="owned-badge-icon">💻</span>
-            <div><div class="owned-badge-count" id="ob-digital-count">0</div><div class="owned-badge-label">Digital</div></div>
-          </div>
-          <div class="owned-badge" id="ob-borrowed" onclick="setOwnershipFilter('borrowed')" title="Borrowed books">
-            <span class="owned-badge-icon">🤝</span>
-            <div><div class="owned-badge-count" id="ob-borrowed-count">0</div><div class="owned-badge-label">Borrowed</div></div>
+          <div class="lib-bar-right">
+            <select class="lib-sort-sel" onchange="setSortBy(this.value)" id="sort-select">
+              <option value="dateAdded">Recent</option>
+              <option value="title">A&#x2013;Z</option>
+              <option value="author">Author</option>
+              <option value="rating">Rating</option>
+              <option value="dateRead">Date Read</option>
+            </select>
+            <button class="lib-filter-btn" id="filter-toggle-btn" onclick="toggleFilterPanel()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              <span class="filter-badge" id="filter-badge" style="display:none;">0</span>
+            </button>
+            <div class="view-toggle">
+              <button id="grid-view-btn" class="active" onclick="setView('grid')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
+              <button id="list-view-btn" onclick="setView('list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+            </div>
           </div>
         </div>
 
-        <!-- Toolbar -->
-        <div class="lib-toolbar">
-          <!-- Search bar -->
-          <div style="position:relative;flex:1;min-width:0;max-width:320px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
-              style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-muted);pointer-events:none;">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/>
-            </svg>
-            <input type="text" class="form-input" id="lib-search" 
-              style="padding-left:32px;border-radius:20px;height:36px;font-size:13px;" 
-              placeholder="Search your library..." 
-              oninput="renderLibrary()" autocomplete="off"/>
-          </div>
-          <!-- Filter toggle -->
-          <button class="btn btn-secondary" id="filter-toggle-btn" onclick="toggleFilterPanel()" style="gap:6px;height:36px;white-space:nowrap;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Filter <span id="filter-badge" style="display:none;" class="filter-badge">0</span>
-          </button>
-          <div style="flex:1;"></div>
-          <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);white-space:nowrap;">Sort:</span>
-          <select class="filter-select" onchange="setSortBy(this.value)" id="sort-select">
-            <option value="dateAdded">Date Added</option>
-            <option value="title">Title A–Z</option>
-            <option value="author">Author</option>
-            <option value="rating">Rating</option>
-            <option value="dateRead">Date Read</option>
-          </select>
-          <div class="view-toggle">
-            <button id="grid-view-btn" class="active" onclick="setView('grid')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            </button>
-            <button id="list-view-btn" onclick="setView('list')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-            </button>
-          </div>
+        <!-- Ownership pills: scrollable row -->
+        <div class="own-pills-row">
+          <button class="own-pill active" id="ob-all" onclick="setOwnershipFilter('all')">&#128218; All <span id="ob-all-count">0</span></button>
+          <button class="own-pill" id="ob-physical" onclick="setOwnershipFilter('physical')">&#128214; Physical <span id="ob-physical-count">0</span></button>
+          <button class="own-pill" id="ob-digital" onclick="setOwnershipFilter('digital')">&#128187; Digital <span id="ob-digital-count">0</span></button>
+          <button class="own-pill" id="ob-borrowed" onclick="setOwnershipFilter('borrowed')">&#129309; Borrowed <span id="ob-borrowed-count">0</span></button>
         </div>
 
         <!-- Filter panel -->
         <div class="filter-panel" id="filter-panel">
-          <div class="filter-panel-grid">
-            <div>
-              <div class="filter-group-title">Status</div>
-              <div class="filter-chip-group" id="fp-status">
-                <button class="filter-chip-sm active" data-status="all" onclick="fpSetStatus('all',this)">All</button>
-                <button class="filter-chip-sm" data-status="reading" onclick="fpSetStatus('reading',this)">Reading</button>
-                <button class="filter-chip-sm" data-status="read" onclick="fpSetStatus('read',this)">Read</button>
-                <button class="filter-chip-sm" data-status="want" onclick="fpSetStatus('want',this)">Want to Read</button>
-                <button class="filter-chip-sm" data-status="dnf" onclick="fpSetStatus('dnf',this)">DNF</button>
-              </div>
-            </div>
-            <div>
-              <div class="filter-group-title">Format / Ownership</div>
-              <div class="filter-chip-group" id="fp-ownership">
-                <button class="filter-chip-sm" data-own="physical" onclick="fpToggleOwn('physical',this)">📖 Physical</button>
-                <button class="filter-chip-sm" data-own="digital" onclick="fpToggleOwn('digital',this)">💻 Digital</button>
-                <button class="filter-chip-sm" data-own="borrowed" onclick="fpToggleOwn('borrowed',this)">🤝 Borrowed</button>
-              </div>
-            </div>
-            <div>
-              <div class="filter-group-title">Genre</div>
-              <div class="filter-chip-group" id="fp-genres" style="max-height:80px;overflow-y:auto;"></div>
-            </div>
-            <div>
-              <div class="filter-group-title">Author</div>
-              <div class="filter-chip-group" id="fp-authors" style="max-height:80px;overflow-y:auto;"></div>
-            </div>
-            <div>
-              <div class="filter-group-title">Tags</div>
-              <div class="filter-chip-group" id="fp-tags" style="max-height:80px;overflow-y:auto;"></div>
-            </div>
-            <div>
-              <div class="filter-group-title">Rating</div>
-              <div class="filter-chip-group" id="fp-rating">
-                <button class="filter-chip-sm" data-rating="5" onclick="fpSetRating(5,this)">★★★★★</button>
-                <button class="filter-chip-sm" data-rating="4" onclick="fpSetRating(4,this)">★★★★+</button>
-                <button class="filter-chip-sm" data-rating="3" onclick="fpSetRating(3,this)">★★★+</button>
-                <button class="filter-chip-sm" data-rating="0" onclick="fpSetRating(0,this)">Unrated</button>
-              </div>
+          <div class="fp-section">
+            <div class="fp-label">Status</div>
+            <div class="filter-chip-group" id="fp-status">
+              <button class="filter-chip-sm active" data-status="all" onclick="fpSetStatus('all',this)">All</button>
+              <button class="filter-chip-sm" data-status="reading" onclick="fpSetStatus('reading',this)">Reading</button>
+              <button class="filter-chip-sm" data-status="read" onclick="fpSetStatus('read',this)">Read</button>
+              <button class="filter-chip-sm" data-status="want" onclick="fpSetStatus('want',this)">Want</button>
+              <button class="filter-chip-sm" data-status="dnf" onclick="fpSetStatus('dnf',this)">DNF</button>
             </div>
           </div>
-          <div class="sort-row">
-            <span class="sort-label">Active filters:</span>
-            <span id="active-filter-summary" style="font-size:12px;color:var(--text-muted);">None</span>
-            <button class="btn btn-ghost" style="margin-left:auto;font-size:12px;color:var(--red);" onclick="clearAllFilters()">Clear All</button>
+          <div class="fp-section">
+            <div class="fp-label">Format</div>
+            <div class="filter-chip-group" id="fp-ownership">
+              <button class="filter-chip-sm" data-own="physical" onclick="fpToggleOwn('physical',this)">&#128214; Physical</button>
+              <button class="filter-chip-sm" data-own="digital" onclick="fpToggleOwn('digital',this)">&#128187; Digital</button>
+              <button class="filter-chip-sm" data-own="borrowed" onclick="fpToggleOwn('borrowed',this)">&#129309; Borrowed</button>
+            </div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">Rating</div>
+            <div class="filter-chip-group" id="fp-rating">
+              <button class="filter-chip-sm" data-rating="5" onclick="fpSetRating(5,this)">&#9733;&#9733;&#9733;&#9733;&#9733;</button>
+              <button class="filter-chip-sm" data-rating="4" onclick="fpSetRating(4,this)">&#9733;&#9733;&#9733;&#9733;+</button>
+              <button class="filter-chip-sm" data-rating="3" onclick="fpSetRating(3,this)">&#9733;&#9733;&#9733;+</button>
+              <button class="filter-chip-sm" data-rating="0" onclick="fpSetRating(0,this)">Unrated</button>
+            </div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">Genre</div>
+            <div class="filter-chip-group" id="fp-genres"></div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">Author</div>
+            <div class="filter-chip-group" id="fp-authors"></div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">Tags</div>
+            <div class="filter-chip-group" id="fp-tags"></div>
+          </div>
+          <div class="fp-footer">
+            <span class="fp-summary" id="active-filter-summary">No filters active</span>
+            <button class="fp-clear-btn" onclick="clearAllFilters()">Clear all</button>
           </div>
         </div>
+
         <div id="library-grid" class="books-grid"></div>
         <div id="library-empty" class="empty-state" style="display:none;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           <h3>Your library is empty</h3>
-          <p>Search for books in Discover or use the + Add Book button to get started.</p>
+          <p>Search in Discover or tap Add Book to get started.</p>
         </div>
       </div>
 
-      <!-- ===== COLLECTIONS PAGE ===== -->
+      <!-- ===== COLLECTIONS ===== -->
       <div class="page" id="page-collections">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;">
+        <div class="page-toprow">
           <div>
-            <h2 style="font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:var(--text-primary);">Collections</h2>
-            <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">Organise your books into custom lists</p>
+            <h2 style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--text-primary);">Collections</h2>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Organise books into custom lists</p>
           </div>
-          <button class="btn btn-primary" onclick="openNewCollectionModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            New Collection
-          </button>
+          <button class="btn btn-primary" onclick="openNewCollectionModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New</button>
         </div>
         <div class="collections-grid" id="collections-grid"></div>
       </div>
 
-      <!-- ===== STATS PAGE ===== -->
+      <!-- ===== STATS ===== -->
       <div class="page" id="page-stats">
-        <div class="greeting" style="margin-bottom:28px;">
-          <h1 style="font-size:26px;">Reading <span>Statistics</span></h1>
+        <div class="stats-row" style="margin-bottom:16px;">
+          <div class="stat-card"><div class="stat-icon" style="background:var(--accent-soft);">&#128218;</div><div class="stat-value" id="s-total">0</div><div class="stat-label">Total</div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:var(--green-soft);">&#9989;</div><div class="stat-value" id="s-read">0</div><div class="stat-label">Read</div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:var(--star);">&#11088;</div><div class="stat-value" id="s-avg-rating">&#8212;</div><div class="stat-label">Avg</div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:var(--purple-soft);">&#127917;</div><div class="stat-value" id="s-genres">0</div><div class="stat-label">Genres</div></div>
         </div>
-        <div class="stats-row" style="margin-bottom:28px;">
-          <div class="stat-card"><div class="stat-icon" style="background:var(--accent-soft);">📚</div><div class="stat-value" id="s-total">0</div><div class="stat-label">Total Books</div></div>
-          <div class="stat-card"><div class="stat-icon" style="background:var(--green-soft);">✅</div><div class="stat-value" id="s-read">0</div><div class="stat-label">Books Read</div></div>
-          <div class="stat-card"><div class="stat-icon" style="background:var(--star);">⭐</div><div class="stat-value" id="s-avg-rating">—</div><div class="stat-label">Avg Rating</div></div>
-          <div class="stat-card"><div class="stat-icon" style="background:var(--purple-soft);">🎭</div><div class="stat-value" id="s-genres">0</div><div class="stat-label">Genres Read</div></div>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stats-card">
-            <div class="stats-card-title">📅 Books Read Per Year</div>
-            <div class="year-chart" id="year-chart"></div>
-          </div>
-          <div class="stats-card">
-            <div class="stats-card-title">🎭 Genres</div>
-            <div class="bar-chart" id="genre-chart"></div>
-          </div>
-          <div class="stats-card">
-            <div class="stats-card-title">🏆 Top Authors</div>
-            <div class="top-list" id="authors-list"></div>
-          </div>
-          <div class="stats-card">
-            <div class="stats-card-title">⭐ Rating Distribution</div>
-            <div class="bar-chart" id="rating-chart"></div>
-          </div>
-          <div class="stats-card stats-full-width">
-            <div class="stats-card-title">🥇 Best Rated Books</div>
-            <div id="best-rated-list"></div>
-          </div>
-          <div class="stats-card">
-            <div class="stats-card-title">📖 Most Read Authors</div>
-            <div id="most-read-authors-list"></div>
-          </div>
-          <div class="stats-card">
-            <div class="stats-card-title">📊 Reading Summary</div>
-            <div class="reading-time-stats" id="reading-summary"></div>
-          </div>
-          <div class="stats-card">
-            <div class="stats-card-title">📚 Format Breakdown</div>
-            <div class="bar-chart" id="format-chart"></div>
-          </div>
-          <div class="stats-card">
-            <div class="stats-card-title">🗓️ Monthly Reading</div>
-            <div class="year-chart" id="monthly-chart" style="height:100px;"></div>
-          </div>
+        <!-- Single column stack — no side-by-side grids -->
+        <div class="stats-stack">
+          <div class="stats-card"><div class="stats-card-title">&#128197; Books Per Year</div><div class="year-chart" id="year-chart"></div></div>
+          <div class="stats-card"><div class="stats-card-title">&#128197; Monthly (This Year)</div><div class="year-chart" id="monthly-chart" style="height:90px;"></div></div>
+          <div class="stats-card"><div class="stats-card-title">&#127917; Genres</div><div class="bar-chart" id="genre-chart"></div></div>
+          <div class="stats-card"><div class="stats-card-title">&#11088; Ratings</div><div class="bar-chart" id="rating-chart"></div></div>
+          <div class="stats-card"><div class="stats-card-title">&#128218; Format</div><div class="bar-chart" id="format-chart"></div></div>
+          <div class="stats-card"><div class="stats-card-title">&#128202; Summary</div><div class="reading-time-stats" id="reading-summary"></div></div>
+          <div class="stats-card"><div class="stats-card-title">&#127945; Best Rated</div><div id="best-rated-list"></div></div>
+          <div class="stats-card"><div class="stats-card-title">&#9997;&#65039; Most Read Authors</div><div id="most-read-authors-list"></div></div>
         </div>
       </div>
 
-      <!-- ===== SETTINGS PAGE ===== -->
+      <!-- ===== SETTINGS: single scrollable page ===== -->
       <div class="page" id="page-settings">
-        <div class="greeting" style="margin-bottom:28px;">
-          <h1 style="font-size:26px;">Settings</h1>
-        </div>
-        <div class="settings-grid">
-          <div class="settings-nav">
-            <div class="settings-nav-item active" onclick="showSettingsPanel('appearance', this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 8a4 4 0 0 1 0 8"/></svg>
-              Appearance
-            </div>
-            <div class="settings-nav-item" onclick="showSettingsPanel('profile', this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              Profile
-            </div>
-            <div class="settings-nav-item" onclick="showSettingsPanel('goals', this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-              Reading Goals
-            </div>
-            <div class="settings-nav-item" onclick="showSettingsPanel('data', this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
-              Import / Export
-            </div>
-            <div class="settings-nav-item" onclick="showSettingsPanel('about', this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              About
-            </div>
-          </div>
 
-          <div>
-            <!-- APPEARANCE -->
-            <div class="settings-panel active" id="sp-appearance">
-              <div class="settings-section">
-                <h3>Colour Theme</h3>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Choose a theme for your library.</p>
-                <div class="theme-grid" id="theme-picker">
-                  <div class="theme-swatch" data-theme="dark" onclick="setTheme('dark')" style="background:linear-gradient(135deg,#1a1612,#2a2318);">
-                    <div class="theme-swatch-dots">
-                      <div class="theme-swatch-dot" style="background:#d4884a;"></div>
-                      <div class="theme-swatch-dot" style="background:#f0e8d8;"></div>
-                      <div class="theme-swatch-dot" style="background:#3d3428;"></div>
-                    </div>
-                    <div class="theme-swatch-name">Ink &amp; Amber</div>
-                    <div style="font-size:10px;color:rgba(255,255,255,0.5);">Default dark</div>
-                  </div>
-                  <div class="theme-swatch" data-theme="light" onclick="setTheme('light')" style="background:linear-gradient(135deg,#ede6d8,#fff8ee);">
-                    <div class="theme-swatch-dots">
-                      <div class="theme-swatch-dot" style="background:#c4700a;"></div>
-                      <div class="theme-swatch-dot" style="background:#1a150f;"></div>
-                      <div class="theme-swatch-dot" style="background:#d4c8b0;"></div>
-                    </div>
-                    <div class="theme-swatch-name" style="color:#1a150f;">Parchment</div>
-                    <div style="font-size:10px;color:rgba(0,0,0,0.4);">Warm light</div>
-                  </div>
-                  <div class="theme-swatch" data-theme="midnight" onclick="setTheme('midnight')" style="background:linear-gradient(135deg,#0d0f1a,#1f2640);">
-                    <div class="theme-swatch-dots">
-                      <div class="theme-swatch-dot" style="background:#7b8cde;"></div>
-                      <div class="theme-swatch-dot" style="background:#e8eaf8;"></div>
-                      <div class="theme-swatch-dot" style="background:#2d3560;"></div>
-                    </div>
-                    <div class="theme-swatch-name">Midnight Blue</div>
-                    <div style="font-size:10px;color:rgba(255,255,255,0.4);">Deep navy</div>
-                  </div>
-                  <div class="theme-swatch" data-theme="forest" onclick="setTheme('forest')" style="background:linear-gradient(135deg,#0c1208,#22301a);">
-                    <div class="theme-swatch-dots">
-                      <div class="theme-swatch-dot" style="background:#7abf50;"></div>
-                      <div class="theme-swatch-dot" style="background:#e0edd8;"></div>
-                      <div class="theme-swatch-dot" style="background:#344828;"></div>
-                    </div>
-                    <div class="theme-swatch-name">Forest</div>
-                    <div style="font-size:10px;color:rgba(255,255,255,0.4);">Dark green</div>
-                  </div>
-                  <div class="theme-swatch" data-theme="rose" onclick="setTheme('rose')" style="background:linear-gradient(135deg,#1a0d10,#3a1e28);">
-                    <div class="theme-swatch-dots">
-                      <div class="theme-swatch-dot" style="background:#e0708a;"></div>
-                      <div class="theme-swatch-dot" style="background:#f5e0e5;"></div>
-                      <div class="theme-swatch-dot" style="background:#5a2e3a;"></div>
-                    </div>
-                    <div class="theme-swatch-name">Rose</div>
-                    <div style="font-size:10px;color:rgba(255,255,255,0.4);">Warm pink</div>
-                  </div>
-                  <div class="theme-swatch" data-theme="slate" onclick="setTheme('slate')" style="background:linear-gradient(135deg,#0e1218,#242e3a);">
-                    <div class="theme-swatch-dots">
-                      <div class="theme-swatch-dot" style="background:#50a8c8;"></div>
-                      <div class="theme-swatch-dot" style="background:#dce8f0;"></div>
-                      <div class="theme-swatch-dot" style="background:#38485a;"></div>
-                    </div>
-                    <div class="theme-swatch-name">Slate</div>
-                    <div style="font-size:10px;color:rgba(255,255,255,0.4);">Cool grey-blue</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- PROFILE -->
-            <div class="settings-panel" id="sp-profile">
-              <div class="settings-section">
-                <h3>Profile</h3>
-                <div class="form-group">
-                  <label class="form-label">Display Name</label>
-                  <div style="display:flex; gap:10px;">
-                    <input type="text" class="form-input" id="profile-display-name" placeholder="Your name"/>
-                    <button class="btn btn-primary" onclick="saveDisplayName()">Save</button>
-                  </div>
-                  <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">This name appears in the sidebar and dashboard greeting.</div>
-                </div>
-                <div class="form-group" style="margin-top:16px;">
-                  <label class="form-label">Email</label>
-                  <div style="font-size:14px; color:var(--text-secondary); padding: 10px 14px; background:var(--bg-elevated); border-radius:9px; border:1px solid var(--border);" id="profile-email">—</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- GOALS -->
-            <div class="settings-panel" id="sp-goals">
-              <div class="settings-section">
-                <h3>Reading Goals</h3>
-                <div class="setting-row">
-                  <div class="setting-info">
-                    <div class="setting-name">Yearly Reading Goal</div>
-                    <div class="setting-desc">How many books do you want to read this year?</div>
-                  </div>
-                </div>
-                <div class="goal-setup">
-                  <input type="number" class="form-input" id="goal-input" placeholder="52" min="1" max="999" style="width:90px; text-align:center; font-size:22px; font-family:'Playfair Display',serif; font-weight:700;"/>
-                  <span style="font-size:14px; color:var(--text-muted);">books in <strong id="goal-year-setting"></strong></span>
-                  <button class="btn btn-primary" onclick="saveGoal()">Save Goal</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- DATA -->
-            <div class="settings-panel" id="sp-data">
-              <div class="settings-section">
-                <h3>Import Data</h3>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Import your reading history from Goodreads (CSV export) or a ConnieReads backup.</p>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                  <label class="btn btn-secondary" style="cursor:pointer;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Import Goodreads CSV
-                    <input type="file" accept=".csv" style="display:none;" onchange="importGoodreads(event)"/>
-                  </label>
-                  <label class="btn btn-secondary" style="cursor:pointer;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Import ConnieReads JSON
-                    <input type="file" accept=".json" style="display:none;" onchange="importShelfwise(event)"/>
-                  </label>
-                </div>
-              </div>
-              <div class="settings-section">
-                <h3>Export Data</h3>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Download a backup of your entire ConnieReads library.</p>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                  <button class="btn btn-secondary" onclick="exportData('json')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Export as JSON
-                  </button>
-                  <button class="btn btn-secondary" onclick="exportData('csv')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Export as CSV
-                  </button>
-                </div>
-              </div>
-              <div class="settings-section" style="border: 1px solid var(--red-soft);">
-                <h3 style="color:var(--red);">Danger Zone</h3>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">This will permanently delete all your books, collections, and settings.</p>
-                <button class="btn" style="background:var(--red-soft); color:var(--red); border:1px solid var(--red);" onclick="clearAllData()">Clear All Data</button>
-              </div>
-            </div>
-
-            <!-- ABOUT -->
-            <div class="settings-panel" id="sp-about">
-              <div class="settings-section" style="text-align:center;">
-                <div style="margin-bottom:20px;">
-                  <div style="width:64px; height:64px; background:var(--accent); border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="32" height="32"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 10h5" stroke-linecap="round"/></svg>
-                  </div>
-                  <div style="font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--text-primary);">ConnieReads</div>
-                  <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Version 1.1.0</div>
-                </div>
-                <p style="font-size:14px; color:var(--text-secondary); max-width:400px; margin:0 auto 20px; line-height:1.6;">Your personal book tracker. Track your reading, discover new books, and organise your library your way.</p>
-                <div style="font-size:12px; color:var(--text-muted);">Built with ❤️ for Connie</div>
-              </div>
-            </div>
+        <div class="settings-block">
+          <div class="settings-block-title">&#127912; Appearance</div>
+          <p class="settings-desc">Choose your colour theme.</p>
+          <div class="theme-grid" id="theme-picker">
+            <div class="theme-swatch" data-theme="dark" onclick="setTheme('dark')" style="background:linear-gradient(135deg,#1a1612,#2a2318);"><div class="theme-swatch-dots"><div class="theme-swatch-dot" style="background:#d4884a;"></div><div class="theme-swatch-dot" style="background:#f0e8d8;"></div><div class="theme-swatch-dot" style="background:#3d3428;"></div></div><div class="theme-swatch-name">Ink &amp; Amber</div><div class="theme-swatch-sub">Default dark</div></div>
+            <div class="theme-swatch" data-theme="light" onclick="setTheme('light')" style="background:linear-gradient(135deg,#ede6d8,#fff8ee);"><div class="theme-swatch-dots"><div class="theme-swatch-dot" style="background:#c4700a;"></div><div class="theme-swatch-dot" style="background:#1a150f;"></div><div class="theme-swatch-dot" style="background:#d4c8b0;"></div></div><div class="theme-swatch-name" style="color:#1a150f;">Parchment</div><div class="theme-swatch-sub" style="opacity:0.5;color:#000;">Warm light</div></div>
+            <div class="theme-swatch" data-theme="midnight" onclick="setTheme('midnight')" style="background:linear-gradient(135deg,#0d0f1a,#1f2640);"><div class="theme-swatch-dots"><div class="theme-swatch-dot" style="background:#7b8cde;"></div><div class="theme-swatch-dot" style="background:#e8eaf8;"></div><div class="theme-swatch-dot" style="background:#2d3560;"></div></div><div class="theme-swatch-name">Midnight</div><div class="theme-swatch-sub">Deep navy</div></div>
+            <div class="theme-swatch" data-theme="forest" onclick="setTheme('forest')" style="background:linear-gradient(135deg,#0c1208,#22301a);"><div class="theme-swatch-dots"><div class="theme-swatch-dot" style="background:#7abf50;"></div><div class="theme-swatch-dot" style="background:#e0edd8;"></div><div class="theme-swatch-dot" style="background:#344828;"></div></div><div class="theme-swatch-name">Forest</div><div class="theme-swatch-sub">Dark green</div></div>
+            <div class="theme-swatch" data-theme="rose" onclick="setTheme('rose')" style="background:linear-gradient(135deg,#1a0d10,#3a1e28);"><div class="theme-swatch-dots"><div class="theme-swatch-dot" style="background:#e0708a;"></div><div class="theme-swatch-dot" style="background:#f5e0e5;"></div><div class="theme-swatch-dot" style="background:#5a2e3a;"></div></div><div class="theme-swatch-name">Rose</div><div class="theme-swatch-sub">Warm pink</div></div>
+            <div class="theme-swatch" data-theme="slate" onclick="setTheme('slate')" style="background:linear-gradient(135deg,#0e1218,#242e3a);"><div class="theme-swatch-dots"><div class="theme-swatch-dot" style="background:#50a8c8;"></div><div class="theme-swatch-dot" style="background:#dce8f0;"></div><div class="theme-swatch-dot" style="background:#38485a;"></div></div><div class="theme-swatch-name">Slate</div><div class="theme-swatch-sub">Cool grey-blue</div></div>
           </div>
         </div>
+
+        <div class="settings-block">
+          <div class="settings-block-title">&#128100; Profile</div>
+          <div class="form-group">
+            <label class="form-label">Display Name</label>
+            <div style="display:flex;gap:8px;"><input type="text" class="form-input" id="profile-display-name" placeholder="Your name"/><button class="btn btn-primary" onclick="saveDisplayName()">Save</button></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Shown on your dashboard greeting.</div>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label class="form-label">Email</label>
+            <div class="info-field" id="profile-email">&#8212;</div>
+          </div>
+          <button class="settings-signout-btn" onclick="authSignOut()">Sign out &#8594;</button>
+        </div>
+
+        <div class="settings-block">
+          <div class="settings-block-title">&#127919; Reading Goal</div>
+          <p class="settings-desc">How many books do you want to read this year?</p>
+          <div class="goal-setup">
+            <input type="number" class="form-input" id="goal-input" placeholder="52" min="1" max="999" style="width:80px;text-align:center;font-size:20px;font-weight:700;font-family:'Playfair Display',serif;"/>
+            <span class="settings-desc">books in <strong id="goal-year-setting"></strong></span>
+            <button class="btn btn-primary" onclick="saveGoal()">Save Goal</button>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <div class="settings-block-title">&#128229; Import Data</div>
+          <p class="settings-desc">Import from Goodreads CSV or a ConnieReads backup.</p>
+          <div class="settings-btn-row">
+            <label class="btn btn-secondary" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Goodreads CSV<input type="file" accept=".csv" style="display:none;" onchange="importGoodreads(event)"/></label>
+            <label class="btn btn-secondary" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> ConnieReads JSON<input type="file" accept=".json" style="display:none;" onchange="importShelfwise(event)"/></label>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <div class="settings-block-title">&#128228; Export Data</div>
+          <p class="settings-desc">Download a backup of your entire library.</p>
+          <div class="settings-btn-row">
+            <button class="btn btn-secondary" onclick="exportData('json')">Export JSON</button>
+            <button class="btn btn-secondary" onclick="exportData('csv')">Export CSV</button>
+          </div>
+        </div>
+
+        <div class="settings-block danger-block">
+          <div class="settings-block-title" style="color:var(--red);">&#9888;&#65039; Danger Zone</div>
+          <p class="settings-desc">Permanently deletes all books, collections and settings. Cannot be undone.</p>
+          <button class="btn" style="background:var(--red-soft);color:var(--red);border:1px solid var(--red);" onclick="clearAllData()">Clear All Data</button>
+        </div>
+
+        <div style="text-align:center;padding:16px 0 32px;">
+          <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text-primary);">ConnieReads</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">v1.1.0 &#183; Built with &#10084;&#65039; for Connie</div>
+        </div>
+
       </div>
 
     </div><!-- /page-content -->
@@ -677,281 +391,61 @@
 <!-- MOBILE BOTTOM NAV -->
 <nav id="mobile-nav">
   <div class="mobile-nav-grid">
-    <div class="mobile-nav-item active" id="mob-dashboard" onclick="showPage('dashboard')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Home
-    </div>
-    <div class="mobile-nav-item" id="mob-search" onclick="showPage('search')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
-      Discover
-    </div>
-    <div class="mobile-nav-item" id="mob-library" onclick="showPage('library')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      Library
-    </div>
-    <div class="mobile-nav-item" id="mob-stats" onclick="showPage('stats')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Stats
-    </div>
-    <div class="mobile-nav-item" id="mob-settings" onclick="showPage('settings')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Settings
-    </div>
+    <div class="mobile-nav-item active" id="mob-dashboard" onclick="showPage('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Home</div>
+    <div class="mobile-nav-item" id="mob-search" onclick="showPage('search')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>Discover</div>
+    <div class="mobile-nav-item" id="mob-library" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Library</div>
+    <div class="mobile-nav-item" id="mob-stats" onclick="showPage('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Stats</div>
+    <div class="mobile-nav-item" id="mob-settings" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
   </div>
 </nav>
 
-<!-- TOAST CONTAINER -->
 <div class="toast-container" id="toast-container"></div>
 
-<!-- ===== ADD / EDIT BOOK MODAL ===== -->
+<!-- ADD/EDIT BOOK MODAL -->
 <div class="modal-overlay" id="book-modal">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title">Add Book</div>
-      <button class="modal-close" onclick="closeModal('book-modal')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
+    <div class="modal-header"><div class="modal-title" id="modal-title">Add Book</div><button class="modal-close" onclick="closeModal('book-modal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body">
       <input type="hidden" id="edit-book-id"/>
-
-      <!-- Cover section -->
       <div class="modal-book-hero" id="modal-book-hero">
-        <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-          <div class="modal-cover" id="modal-cover-preview">📚</div>
-          <div class="cover-actions">
-            <button class="cover-action-btn" onclick="refreshCover()">🔄 Refresh</button>
-            <button class="cover-action-btn" onclick="document.getElementById('cover-url-input').focus()">🔗 URL</button>
-          </div>
-        </div>
-        <div class="modal-book-info" id="modal-book-info-display" style="display:none;">
-          <div class="modal-book-title" id="modal-book-title-display"></div>
-          <div class="modal-book-author" id="modal-book-author-display"></div>
-          <div class="modal-book-desc" id="modal-book-desc-display"></div>
-        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="modal-cover" id="modal-cover-preview">&#128218;</div><div class="cover-actions"><button class="cover-action-btn" onclick="refreshCover()">&#128260; Refresh</button><button class="cover-action-btn" onclick="document.getElementById('cover-url-input').focus()">&#128279; URL</button></div></div>
+        <div class="modal-book-info" id="modal-book-info-display" style="display:none;"><div class="modal-book-title" id="modal-book-title-display"></div><div class="modal-book-author" id="modal-book-author-display"></div><div class="modal-book-desc" id="modal-book-desc-display"></div></div>
       </div>
-
-      <!-- Cover URL input -->
-      <div class="form-group">
-        <label class="form-label">Cover Image URL (paste to override)</label>
-        <div class="cover-url-group">
-          <input type="url" class="form-input" id="cover-url-input" placeholder="https://..." oninput="updateCoverPreview()"/>
-          <button class="btn btn-secondary" onclick="refreshCover()">🔄</button>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Title *</label>
-          <input type="text" class="form-input" id="f-title" placeholder="Book title" oninput="updateModalTitle()"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Author *</label>
-          <input type="text" class="form-input" id="f-author" placeholder="Author name" oninput="updateModalTitle()"/>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Genre</label>
-          <input type="text" class="form-input" id="f-genre" placeholder="e.g. Fantasy, Horror"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">ISBN / ID</label>
-          <input type="text" class="form-input" id="f-isbn" placeholder="ISBN or Google Books ID"/>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Tags <span style="font-weight:400;color:var(--text-muted);font-size:11px;">(Goodreads shelves or custom labels)</span></label>
-        <div class="tag-input-wrap" id="tag-input-wrap">
-          <div id="tag-chips" class="tag-chips-list"></div>
-          <input type="text" id="f-tags-input" class="tag-text-input" placeholder="Add tag, press Enter..." 
-            onkeydown="handleTagInput(event)" autocomplete="off"/>
-        </div>
-        <input type="hidden" id="f-tags"/>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Reading Status</label>
-          <select class="form-select" id="f-status">
-            <option value="want">Want to Read</option>
-            <option value="reading">Currently Reading</option>
-            <option value="read">Read</option>
-            <option value="dnf">Did Not Finish</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Date Started</label>
-          <input type="date" class="form-input" id="f-date-started"/>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Date Read / Finished</label>
-          <input type="date" class="form-input" id="f-date-read"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Pages</label>
-          <input type="number" class="form-input" id="f-pages" placeholder="0"/>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Pages Read</label>
-          <input type="number" class="form-input" id="f-pages-read" placeholder="0"/>
-        </div>
-        <div class="form-group"></div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Your Rating</label>
-        <div class="star-rating" id="star-rating">
-          <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
-          <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
-          <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
-          <button class="star-btn" data-val="4" onclick="setRating(4)">★</button>
-          <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Ownership</label>
-        <div class="checkbox-row" id="ownership-row">
-          <label class="checkbox-item" id="own-physical-lbl">
-            <input type="checkbox" id="own-physical" onchange="toggleCheckbox('own-physical-lbl', 'own-physical')"/> 📖 Physical Copy
-          </label>
-          <label class="checkbox-item" id="own-digital-lbl">
-            <input type="checkbox" id="own-digital" onchange="toggleCheckbox('own-digital-lbl', 'own-digital')"/> 💻 Digital Copy
-          </label>
-          <label class="checkbox-item" id="own-borrowed-lbl">
-            <input type="checkbox" id="own-borrowed" onchange="toggleCheckbox('own-borrowed-lbl', 'own-borrowed')"/> 🤝 Borrowed
-          </label>
-        </div>
-      </div>
-
-      <div class="form-row" id="copies-row">
-        <div class="form-group">
-          <label class="form-label">Number of Physical Copies</label>
-          <input type="number" class="form-input" id="f-copies" placeholder="1" min="0"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Borrowed From</label>
-          <input type="text" class="form-input" id="f-borrowed-from" placeholder="Name of person/library"/>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Collections</label>
-        <div id="collection-checkboxes" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;"></div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Notes / Review</label>
-        <textarea class="form-textarea" id="f-notes" placeholder="Your thoughts, notes, favourite quotes..."></textarea>
-      </div>
-
+      <div class="form-group"><label class="form-label">Cover Image URL (paste to override)</label><div class="cover-url-group"><input type="url" class="form-input" id="cover-url-input" placeholder="https://&#x2026;" oninput="updateCoverPreview()"/><button class="btn btn-secondary" onclick="refreshCover()">&#128260;</button></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Title *</label><input type="text" class="form-input" id="f-title" placeholder="Book title" oninput="updateModalTitle()"/></div><div class="form-group"><label class="form-label">Author *</label><input type="text" class="form-input" id="f-author" placeholder="Author name" oninput="updateModalTitle()"/></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Genre</label><input type="text" class="form-input" id="f-genre" placeholder="e.g. Fantasy, Horror"/></div><div class="form-group"><label class="form-label">ISBN / ID</label><input type="text" class="form-input" id="f-isbn" placeholder="ISBN or Google Books ID"/></div></div>
+      <div class="form-group"><label class="form-label">Tags <span style="font-weight:400;color:var(--text-muted);font-size:11px;">(Goodreads shelves or custom labels)</span></label><div class="tag-input-wrap" id="tag-input-wrap"><div id="tag-chips" class="tag-chips-list"></div><input type="text" id="f-tags-input" class="tag-text-input" placeholder="Add tag, press Enter&#x2026;" onkeydown="handleTagInput(event)" autocomplete="off"/></div><input type="hidden" id="f-tags"/></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Reading Status</label><select class="form-select" id="f-status"><option value="want">Want to Read</option><option value="reading">Currently Reading</option><option value="read">Read</option><option value="dnf">Did Not Finish</option></select></div><div class="form-group"><label class="form-label">Date Started</label><input type="date" class="form-input" id="f-date-started"/></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Date Read / Finished</label><input type="date" class="form-input" id="f-date-read"/></div><div class="form-group"><label class="form-label">Pages</label><input type="number" class="form-input" id="f-pages" placeholder="0"/></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Pages Read</label><input type="number" class="form-input" id="f-pages-read" placeholder="0"/></div><div class="form-group"></div></div>
+      <div class="form-group"><label class="form-label">Your Rating</label><div class="star-rating" id="star-rating"><button class="star-btn" data-val="1" onclick="setRating(1)">&#9733;</button><button class="star-btn" data-val="2" onclick="setRating(2)">&#9733;</button><button class="star-btn" data-val="3" onclick="setRating(3)">&#9733;</button><button class="star-btn" data-val="4" onclick="setRating(4)">&#9733;</button><button class="star-btn" data-val="5" onclick="setRating(5)">&#9733;</button></div></div>
+      <div class="form-group"><label class="form-label">Ownership</label><div class="checkbox-row" id="ownership-row"><label class="checkbox-item" id="own-physical-lbl"><input type="checkbox" id="own-physical" onchange="toggleCheckbox('own-physical-lbl','own-physical')"/> &#128214; Physical Copy</label><label class="checkbox-item" id="own-digital-lbl"><input type="checkbox" id="own-digital" onchange="toggleCheckbox('own-digital-lbl','own-digital')"/> &#128187; Digital Copy</label><label class="checkbox-item" id="own-borrowed-lbl"><input type="checkbox" id="own-borrowed" onchange="toggleCheckbox('own-borrowed-lbl','own-borrowed')"/> &#129309; Borrowed</label></div></div>
+      <div class="form-row" id="copies-row"><div class="form-group"><label class="form-label">Number of Physical Copies</label><input type="number" class="form-input" id="f-copies" placeholder="1" min="0"/></div><div class="form-group"><label class="form-label">Borrowed From</label><input type="text" class="form-input" id="f-borrowed-from" placeholder="Name of person/library"/></div></div>
+      <div class="form-group"><label class="form-label">Collections</label><div id="collection-checkboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;"></div></div>
+      <div class="form-group"><label class="form-label">Notes / Review</label><textarea class="form-textarea" id="f-notes" placeholder="Your thoughts, notes, favourite quotes&#x2026;"></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" id="delete-book-btn" onclick="deleteCurrentBook()" style="margin-right:auto; color:var(--red); display:none;">
-        Delete
-      </button>
-      <button class="btn btn-secondary" onclick="closeModal('book-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveBook()">Save Book</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" id="delete-book-btn" onclick="deleteCurrentBook()" style="margin-right:auto;color:var(--red);display:none;">Delete</button><button class="btn btn-secondary" onclick="closeModal('book-modal')">Cancel</button><button class="btn btn-primary" onclick="saveBook()">Save Book</button></div>
   </div>
 </div>
 
 <!-- NEW COLLECTION MODAL -->
 <div class="modal-overlay" id="collection-modal">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-header">
-      <div class="modal-title">New Collection</div>
-      <button class="modal-close" onclick="closeModal('collection-modal')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
+    <div class="modal-header"><div class="modal-title">New Collection</div><button class="modal-close" onclick="closeModal('collection-modal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label">Collection Name</label>
-        <input type="text" class="form-input" id="col-name" placeholder="e.g. Horror, LGBTQ+, Classics..."/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Emoji Icon</label>
-        <div style="display:flex; flex-wrap:wrap; gap:6px;">
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'📚')">📚</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'👻')">👻</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'🏳️‍🌈')">🏳️‍🌈</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'💫')">💫</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'🔥')">🔥</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'💜')">💜</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'🌙')">🌙</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'⚔️')">⚔️</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'🌺')">🌺</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'🏆')">🏆</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'🌍')">🌍</span>
-          <span class="emoji-opt" style="font-size:22px; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid var(--border);" onclick="selectEmoji(this,'💡')">💡</span>
-        </div>
-        <input type="hidden" id="col-emoji" value="📚"/>
-      </div>
+      <div class="form-group"><label class="form-label">Collection Name</label><input type="text" class="form-input" id="col-name" placeholder="e.g. Horror, LGBTQ+, Classics&#x2026;"/></div>
+      <div class="form-group"><label class="form-label">Emoji Icon</label><div style="display:flex;flex-wrap:wrap;gap:6px;"><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#128218;')">&#128218;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#128123;')">&#128123;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#127987;&#65039;&#8205;&#127752;')">&#127987;&#65039;&#8205;&#127752;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#128171;')">&#128171;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#128293;')">&#128293;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#128156;')">&#128156;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#127769;')">&#127769;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#9876;&#65039;')">&#9876;&#65039;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#127802;')">&#127802;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#127942;')">&#127942;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#127758;')">&#127758;</span><span class="emoji-opt" style="font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" onclick="selectEmoji(this,'&#128161;')">&#128161;</span></div><input type="hidden" id="col-emoji" value="&#128218;"/></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('collection-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveCollection()">Create Collection</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('collection-modal')">Cancel</button><button class="btn btn-primary" onclick="saveCollection()">Create Collection</button></div>
   </div>
 </div>
 
-<!-- BOOK DETAIL MODAL (view only) -->
+<!-- BOOK DETAIL MODAL -->
 <div class="modal-overlay" id="book-detail-modal">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Book Details</div>
-      <button class="modal-close" onclick="closeModal('book-detail-modal')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
+    <div class="modal-header"><div class="modal-title">Book Details</div><button class="modal-close" onclick="closeModal('book-detail-modal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body" id="book-detail-body"></div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('book-detail-modal')">Close</button>
-      <button class="btn btn-primary" id="detail-edit-btn">Edit Book</button>
-    </div>
-  </div>
-</div>
-
-
-
-
-<!-- BARCODE SCANNER MODAL -->
-<div class="modal-overlay" id="scanner-modal">
-  <div class="modal" style="max-width:440px;">
-    <div class="modal-header">
-      <div class="modal-title">📷 Scan Book Barcode</div>
-      <button class="modal-close" onclick="closeScanner()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body" style="padding-top:0;">
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Point your camera at the ISBN barcode on the back of the book.</p>
-      <div class="scanner-overlay">
-        <video id="scanner-video" autoplay playsinline muted></video>
-        <div class="scanner-frame"><div class="scanner-line"></div></div>
-        <canvas id="scanner-canvas"></canvas>
-      </div>
-      <div class="scanner-status" id="scanner-status">📷 Starting camera...</div>
-      <div id="scanner-result" style="display:none; padding:14px; background:var(--bg-elevated); border-radius:10px; margin-top:12px;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">ISBN detected:</div>
-        <div style="font-size:16px; font-weight:600; color:var(--accent); letter-spacing:1px;" id="scanner-isbn-display"></div>
-        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;" id="scanner-book-preview">Searching...</div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeScanner()">Cancel</button>
-      <button class="btn btn-primary" id="scanner-add-btn" style="display:none;" onclick="addScannedBook()">Add to Library</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('book-detail-modal')">Close</button><button class="btn btn-primary" id="detail-edit-btn">Edit Book</button></div>
   </div>
 </div>
 
