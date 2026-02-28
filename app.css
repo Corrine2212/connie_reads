@@ -1034,6 +1034,24 @@ a { color: inherit; text-decoration: none; }
 }
 .search-hero-bar input:focus { outline: none; }
 .search-hero-bar:focus-within { border-color: var(--accent); }
+.search-hero-bar button {
+  flex-shrink: 0;
+  height: 100%;
+  padding: 0 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 0 28px 28px 0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-hero-bar button:hover { background: var(--accent-hover); }
 /* dummy placeholder to not break selector count*/
 .search-hero-bar svg {
   pointer-events: none;

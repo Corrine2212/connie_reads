@@ -456,7 +456,7 @@ function showPage(page) {
   closeSidebar();
 
   if (page === 'dashboard') refreshDashboard();
-  if (page === 'library') renderLibrary();
+  if (page === 'library') { _libScrollBound = false; renderLibrary(); }
   if (page === 'collections') renderCollections();
   if (page === 'stats') renderStats();
 }
@@ -1034,6 +1034,10 @@ function bookCoverImg(book, fallbackSizeClass = '') {
 // ---- RENDER BOOK CARD ----
 let _renderLibTimer = null;
 let _filterOptsDirty = true; // set true when books change
+let _libFiltered = [];        // current filtered+sorted list
+let _libPage = 0;             // how many pages loaded
+const LIB_PAGE_SIZE = 48;     // books per page (3 cols × 16 rows)
+let _libScrollBound = false;  // scroll listener attached?
 function renderLibrary() {
   // Debounce rapid calls (e.g. realtime Firestore updates)
   clearTimeout(_renderLibTimer);
@@ -1095,12 +1099,64 @@ function _doRenderLibrary() {
   grid.style.display = '';
   empty.style.display = 'none';
 
-  const html = currentView === 'grid'
-    ? filtered.map((book, i) => renderBookCard(book, i)).join('')
-    : filtered.map((book, i) => renderBookListItem(book, i)).join('');
+  // Store filtered list, reset to page 0, render first batch
+  _libFiltered = filtered;
+  _libPage = 0;
   grid.className = currentView === 'grid' ? 'books-grid' : 'books-list';
-  // Use requestAnimationFrame to avoid blocking the main thread
-  requestAnimationFrame(() => { grid.innerHTML = html; });
+  grid.innerHTML = '';
+  _renderLibPage(grid, true);
+  _attachLibScroll();
+}
+
+function _renderLibPage(grid, first = false) {
+  if (!grid) grid = document.getElementById('library-grid');
+  const start = _libPage * LIB_PAGE_SIZE;
+  const batch = _libFiltered.slice(start, start + LIB_PAGE_SIZE);
+  if (batch.length === 0) return;
+  const html = currentView === 'grid'
+    ? batch.map((book, i) => renderBookCard(book, start + i)).join('')
+    : batch.map((book, i) => renderBookListItem(book, start + i)).join('');
+  requestAnimationFrame(() => {
+    if (first) {
+      grid.innerHTML = html;
+    } else {
+      grid.insertAdjacentHTML('beforeend', html);
+    }
+    // Update or remove load-more sentinel
+    const old = document.getElementById('lib-load-more');
+    if (old) old.remove();
+    if ((start + batch.length) < _libFiltered.length) {
+      const sentinel = document.createElement('div');
+      sentinel.id = 'lib-load-more';
+      sentinel.style.cssText = 'grid-column:1/-1;text-align:center;padding:16px;color:var(--text-muted);font-size:12px;';
+      sentinel.textContent = `Showing ${start + batch.length} of ${_libFiltered.length} books`;
+      grid.appendChild(sentinel);
+    }
+  });
+  _libPage++;
+}
+
+function _attachLibScroll() {
+  const page = document.getElementById('page-library');
+  if (!page) return;
+  if (_libScrollBound) return;
+  _libScrollBound = true;
+  // Use the main scrollable container
+  const scroller = document.documentElement;
+  const onScroll = () => {
+    // Only if library page is active
+    if (!document.getElementById('page-library')?.classList.contains('active')) return;
+    const sentinel = document.getElementById('lib-load-more');
+    if (!sentinel) return;
+    const rect = sentinel.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 200) {
+      _renderLibPage(document.getElementById('library-grid'), false);
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  // Also handle the page-content scroll if it scrolls independently
+  const pageContent = document.querySelector('.page-content');
+  if (pageContent) pageContent.addEventListener('scroll', onScroll, { passive: true });
 }
 
 function buildFilterOptions() {
@@ -1271,8 +1327,8 @@ function renderBookCard(book, i) {
   const tagsHtml = (book.tags||[]).length
     ? '<div class="tag-display" style="margin-top:4px;">' + book.tags.slice(0,2).map(t=>'<span class="tag-badge">'+escHtml(t)+'</span>').join('') + '</div>'
     : '';
-  const delay = (i * 0.03).toFixed(2);
-  return `<div class="book-card" onclick="openBookDetail('${book.id}')" style="animation-delay:${delay}s">
+  return `<div class="book-card" onclick="openBookDetail('${book.id}')" style="">
+
     <div class="book-cover-lg">${bookCoverImg(book)}${ownerBadge}</div>
     <div class="book-card-title">${escHtml(book.title)}</div>
     <div class="book-card-author">${escHtml(book.author)}</div>
