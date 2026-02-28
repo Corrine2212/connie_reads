@@ -460,6 +460,7 @@ function showPage(page) {
   if (page === 'library') { _libScrollBound = false; renderLibrary(); }
   if (page === 'collections') renderCollections();
   if (page === 'stats') renderStats();
+  if (page === 'settings') genreEnrichInit();
 }
 
 function toggleSidebar() {
@@ -1899,6 +1900,262 @@ function renderStats() {
       <div class="bar-value">${count}</div>
     </div>
   `).join('') + (physCount + digCount + borCount === 0 ? '<div style="color:var(--text-muted);font-size:13px;">Track ownership when adding books</div>' : '');
+}
+
+
+// ---- GENRE ENRICHMENT TOOL ----
+let _geResults   = [];   // { book, genre, state: 'approved'|'skipped'|'flagged' }
+let _geCancelled = false;
+
+function genreEnrichInit() {
+  // Called when settings page opens — show count of books missing genre
+  const missing = books.filter(b => !b.genre || !b.genre.trim());
+  const el = document.getElementById('ge-count-line');
+  const btn = document.getElementById('ge-start-btn');
+  if (!el) return;
+  if (missing.length === 0) {
+    el.textContent = '✅ All books have a genre assigned.';
+    if (btn) btn.disabled = true;
+  } else {
+    el.textContent = `${missing.length} book${missing.length !== 1 ? 's' : ''} missing a genre.`;
+    if (btn) btn.disabled = false;
+  }
+  // Reset to idle if not already in progress
+  const progress = document.getElementById('ge-progress');
+  const review   = document.getElementById('ge-review');
+  const idle     = document.getElementById('ge-idle');
+  if (progress && review && idle) {
+    if (progress.style.display === 'none' && review.style.display === 'none') {
+      idle.style.display = '';
+    }
+  }
+}
+
+async function genreEnrichStart() {
+  const missing = books.filter(b => !b.genre || !b.genre.trim());
+  if (missing.length === 0) { showToast('All books already have a genre', 'info'); return; }
+
+  _geCancelled = false;
+  _geResults   = [];
+
+  // Switch to progress view
+  document.getElementById('ge-idle').style.display     = 'none';
+  document.getElementById('ge-progress').style.display = '';
+  document.getElementById('ge-review').style.display   = 'none';
+
+  const labelEl = document.getElementById('ge-progress-label');
+  const countEl = document.getElementById('ge-progress-count');
+  const barEl   = document.getElementById('ge-progress-bar');
+
+  for (let i = 0; i < missing.length; i++) {
+    if (_geCancelled) break;
+
+    const book = missing[i];
+    const pct  = Math.round((i / missing.length) * 100);
+    barEl.style.width    = pct + '%';
+    countEl.textContent  = `${i + 1} / ${missing.length}`;
+    labelEl.textContent  = `Checking "${book.title.substring(0, 30)}${book.title.length > 30 ? '…' : ''}"`;
+
+    // Try ISBN first, then title+author search
+    let genre = '';
+    if (book.isbn) {
+      genre = await fetchGenreFromOL(book.isbn);
+    }
+    if (!genre) {
+      genre = await fetchGenreByTitle(book.title, book.author);
+    }
+
+    _geResults.push({
+      book,
+      genre,
+      state: genre ? 'approved' : 'flagged'   // flagged = not found, needs manual input
+    });
+
+    // Small delay to avoid hammering OL
+    await new Promise(r => setTimeout(r, 120));
+  }
+
+  // Finish bar
+  barEl.style.width   = '100%';
+  countEl.textContent = `${_geResults.length} / ${missing.length}`;
+  labelEl.textContent = 'Done!';
+
+  await new Promise(r => setTimeout(r, 400));
+  genreEnrichShowReview();
+}
+
+// Fetch genre by title+author via Open Library search (no ISBN)
+async function fetchGenreByTitle(title, author) {
+  try {
+    const q = encodeURIComponent((title || '') + ' ' + (author || ''));
+    const res = await fetch(
+      `https://openlibrary.org/search.json?q=${q}&limit=3&fields=subject,key`
+    );
+    if (!res.ok) return '';
+    const data = await res.json();
+    const doc  = data.docs?.[0];
+    if (!doc) return '';
+    // Try works endpoint for richer subjects
+    if (doc.key) {
+      const wRes = await fetch(`https://openlibrary.org${doc.key}.json`);
+      if (wRes.ok) {
+        const wData = await wRes.json();
+        const subjects = (wData.subjects || []).concat(wData.subject_places || []);
+        const g = pickGenre(subjects);
+        if (g) return g;
+      }
+    }
+    return pickGenre(doc.subject || []);
+  } catch { return ''; }
+}
+
+function genreEnrichShowReview() {
+  document.getElementById('ge-progress').style.display = 'none';
+  document.getElementById('ge-review').style.display   = '';
+
+  const found    = _geResults.filter(r => r.genre).length;
+  const notFound = _geResults.filter(r => !r.genre).length;
+
+  const summaryEl = document.getElementById('ge-review-summary');
+  summaryEl.innerHTML =
+    `<span style="color:var(--green);font-weight:500;">✅ ${found} found</span>` +
+    (notFound ? `&ensp;<span style="color:var(--accent);font-weight:500;">⚑ ${notFound} not found — fill in manually</span>` : '') +
+    `<span style="color:var(--text-muted);font-size:11px;display:block;margin-top:4px;">Approve, edit, or skip each book. Nothing saves until you click "Save Approved".</span>`;
+
+  const listEl = document.getElementById('ge-review-list');
+  listEl.innerHTML = _geResults.map((r, i) => {
+    const book       = r.book;
+    const coverHtml  = book.coverUrl
+      ? `<img src="${book.coverUrl}" onerror="this.style.display='none'" alt=""/>`
+      : bookSpineHTML(book);
+    const notFound   = !r.genre;
+    const inputClass = notFound ? 'ge-genre-input ge-not-found' : 'ge-genre-input';
+    const pill       = notFound
+      ? `<span class="ge-status-pill notfound">⚑ not found</span>`
+      : '';
+    const rowClass   = r.state === 'approved' ? 'ge-book-row ge-approved'
+                     : r.state === 'skipped'  ? 'ge-book-row ge-skipped'
+                     : r.state === 'flagged'  ? 'ge-book-row ge-flagged'
+                     : 'ge-book-row';
+    const approveActive = r.state === 'approved' ? ' ge-btn-approve' : '';
+
+    return `
+      <div class="${rowClass}" id="ge-row-${i}">
+        <div class="ge-cover">${coverHtml}</div>
+        <div class="ge-info">
+          <div class="ge-title" title="${escHtml(book.title)}">${escHtml(book.title)}</div>
+          <div class="ge-author">${escHtml(book.author || '')}</div>
+        </div>
+        ${pill}
+        <div class="ge-genre-wrap">
+          <input
+            class="${inputClass}"
+            id="ge-input-${i}"
+            list="genre-suggestions"
+            value="${escHtml(r.genre)}"
+            placeholder="${notFound ? 'Type genre…' : ''}"
+            oninput="geOnInput(${i}, this.value)"
+          />
+          <button class="ge-action-btn${approveActive}" id="ge-approve-${i}"
+            onclick="geToggleApprove(${i})" title="${r.state === 'approved' ? 'Approved' : 'Approve'}">✓</button>
+          <button class="ge-action-btn" onclick="geSkip(${i})" title="Skip this book">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function geOnInput(i, val) {
+  _geResults[i].genre = val.trim();
+  // Auto-approve if they typed something
+  if (val.trim() && _geResults[i].state !== 'approved') {
+    _geResults[i].state = 'approved';
+    const row = document.getElementById('ge-row-' + i);
+    if (row) { row.className = 'ge-book-row ge-approved'; }
+    const btn = document.getElementById('ge-approve-' + i);
+    if (btn) btn.classList.add('ge-btn-approve');
+  }
+}
+
+function geToggleApprove(i) {
+  const r   = _geResults[i];
+  const row = document.getElementById('ge-row-' + i);
+  const btn = document.getElementById('ge-approve-' + i);
+  if (r.state === 'approved') {
+    r.state = r.genre ? 'pending' : 'flagged';
+    row.className = r.genre ? 'ge-book-row' : 'ge-book-row ge-flagged';
+    btn.classList.remove('ge-btn-approve');
+  } else {
+    if (!r.genre) { showToast('Enter a genre first', 'info'); return; }
+    r.state = 'approved';
+    row.className = 'ge-book-row ge-approved';
+    btn.classList.add('ge-btn-approve');
+  }
+}
+
+function geSkip(i) {
+  _geResults[i].state = 'skipped';
+  const row = document.getElementById('ge-row-' + i);
+  if (row) row.className = 'ge-book-row ge-skipped';
+}
+
+function genreEnrichApproveAll() {
+  _geResults.forEach((r, i) => {
+    // Read current input value in case user edited it
+    const input = document.getElementById('ge-input-' + i);
+    if (input) r.genre = input.value.trim();
+    if (r.genre && r.state !== 'skipped') {
+      r.state = 'approved';
+      const row = document.getElementById('ge-row-' + i);
+      if (row) row.className = 'ge-book-row ge-approved';
+      const btn = document.getElementById('ge-approve-' + i);
+      if (btn) btn.classList.add('ge-btn-approve');
+    }
+  });
+}
+
+async function genreEnrichSaveAll() {
+  const toSave = _geResults.filter(r => r.state === 'approved' && r.genre);
+  if (toSave.length === 0) {
+    showToast('No approved genres to save — approve some first', 'info');
+    return;
+  }
+  const btn = document.querySelector('#ge-review .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  let saved = 0;
+  for (const r of toSave) {
+    const book = books.find(b => b.id === r.book.id);
+    if (book) {
+      book.genre = r.genre;
+      await saveBookToFirestore(book);
+      saved++;
+    }
+  }
+
+  showToast(`Saved genres for ${saved} book${saved !== 1 ? 's' : ''} ✓`, 'success');
+  _filterOptsDirty = true;
+  renderLibrary();
+
+  // Back to idle with updated count
+  document.getElementById('ge-review').style.display   = 'none';
+  document.getElementById('ge-progress').style.display = 'none';
+  document.getElementById('ge-idle').style.display     = '';
+  genreEnrichInit();
+}
+
+function genreEnrichCancel() {
+  _geCancelled = true;
+  document.getElementById('ge-progress').style.display = 'none';
+  document.getElementById('ge-idle').style.display     = '';
+  genreEnrichInit();
+}
+
+function genreEnrichReset() {
+  _geResults   = [];
+  _geCancelled = false;
+  document.getElementById('ge-review').style.display   = 'none';
+  document.getElementById('ge-idle').style.display     = '';
+  genreEnrichInit();
 }
 
 // ---- SETTINGS ----

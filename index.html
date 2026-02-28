@@ -364,6 +364,43 @@
           </div>
         </div>
 
+        <!-- GENRE ENRICHMENT TOOL -->
+        <div class="settings-block" id="genre-enrich-block">
+          <div class="settings-block-title">🏷️ Genre Enrichment</div>
+          <p class="settings-desc">Auto-fetch genres for books that are missing one using Open Library. You review every suggestion before anything is saved.</p>
+
+          <!-- Step 1: idle state -->
+          <div id="ge-idle">
+            <div id="ge-count-line" class="settings-desc" style="margin-bottom:12px;color:var(--text-muted);"></div>
+            <button class="btn btn-primary" onclick="genreEnrichStart()" id="ge-start-btn">
+              🔍 Fetch Genre Suggestions
+            </button>
+          </div>
+
+          <!-- Step 2: progress -->
+          <div id="ge-progress" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span id="ge-progress-label" style="font-size:13px;color:var(--text-muted);">Fetching…</span>
+              <span id="ge-progress-count" style="font-size:12px;color:var(--text-muted);"></span>
+            </div>
+            <div style="height:6px;background:var(--bg-elevated);border-radius:4px;overflow:hidden;margin-bottom:12px;">
+              <div id="ge-progress-bar" style="height:100%;width:0%;background:var(--accent);border-radius:4px;transition:width 0.3s ease;"></div>
+            </div>
+            <button class="btn btn-ghost" onclick="genreEnrichCancel()" style="font-size:12px;color:var(--text-muted);">Cancel</button>
+          </div>
+
+          <!-- Step 3: review results -->
+          <div id="ge-review" style="display:none;">
+            <div id="ge-review-summary" style="font-size:13px;margin-bottom:14px;"></div>
+            <div id="ge-review-list" style="display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto;margin-bottom:14px;"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <button class="btn btn-primary" onclick="genreEnrichSaveAll()">💾 Save Approved</button>
+              <button class="btn btn-ghost" onclick="genreEnrichApproveAll()" style="font-size:13px;">✓ Approve All</button>
+              <button class="btn btn-ghost" onclick="genreEnrichReset()" style="font-size:13px;color:var(--text-muted);">↩ Start Over</button>
+            </div>
+          </div>
+        </div>
+
         <div class="settings-block">
           <div class="settings-block-title">&#128228; Export Data</div>
           <p class="settings-desc">Download a backup of your entire library.</p>
