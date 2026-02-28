@@ -422,16 +422,16 @@ a { color: inherit; text-decoration: none; }
   padding: 16px 20px 40px;
 }
 
-/* Dashboard: top padding only, cards go edge-to-edge */
+/* Dashboard: uniform padding so cards align with stat boxes */
 #page-dashboard {
-  padding-top: 24px;
+  padding: 20px 16px 40px;
 }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ========== DASHBOARD ========== */
 .greeting {
-  padding: 0 32px;
-  margin-bottom: 24px;
+  padding: 0;
+  margin-bottom: 16px;
 }
 .greeting-sub {
   font-size: 13px;
@@ -1537,19 +1537,13 @@ input[type="date"].form-input {
 /* ========== DASHBOARD CARDS ========== */
 .dash-card {
   background: var(--bg-card);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  border-left: none;
-  border-right: none;
-  border-radius: 0;
-  padding: 20px 32px;
-  margin-bottom: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
   min-width: 0;
   overflow: hidden;
   width: 100%;
-}
-.dash-card + .dash-card {
-  border-top: none;
+  box-sizing: border-box;
 }
 .dash-card-head {
   display: flex;
@@ -1599,11 +1593,12 @@ input[type="date"].form-input {
 
 /* ========== DASHBOARD LAYOUT ========== */
 .dash-main {
-  display: block;
-  border-top: 1px solid var(--border);
-  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;        /* same gap as stats-row */
+  margin-top: 8px; /* same gap continuing from stat cards */
 }
-.dash-main-left {}
+.dash-main-left { display: contents; } /* children participate in dash-main grid directly */
 .dash-main-right { display: none; }
 
 /* ========== STATS OVERVIEW (2x2 grid) ========== */
@@ -1611,8 +1606,8 @@ input[type="date"].form-input {
   display: grid;
   grid-template-columns: 1fr 1fr;  /* mobile: 2x2 */
   gap: 8px;
-  margin-bottom: 12px;
-  padding: 0 32px;
+  margin-bottom: 0; /* gap handled by page-dashboard padding + dash-main gap */
+  padding: 0 16px;
 }
 .stat-card {
   background: var(--bg-card);
@@ -1924,19 +1919,16 @@ input[type="date"].form-input {
   #main { margin-left: 240px; }
   /* page-content has no padding — each page handles its own */
 
-  /* Desktop 4-col stats */
-  .stats-row { grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; padding: 0 32px; }
+  /* Desktop: all dashboard items share same padding/gap */
+  #page-dashboard { padding: 28px 28px 48px; }
+  .stats-row { grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 0; padding: 0; }
   .stat-card { padding: 20px; }
   .stat-value { font-size: 32px; }
   .stat-icon { width: 36px; height: 36px; font-size: 18px; margin-bottom: 14px; }
   .stat-change { display: block; }
-
-  /* Dashboard cards go edge-to-edge, generous internal padding */
-  .dash-card { padding: 22px 40px; }
-  .greeting { padding: 0 40px; margin-bottom: 20px; }
-
-  /* Dashboard: single col stack (two-col needs JS rework, keep simple) */
-  #page-dashboard .dash-main { display: block; }
+  .dash-main { gap: 16px; margin-top: 16px; }
+  .dash-card { padding: 22px 24px; border-radius: 14px; }
+  .greeting { padding: 0; margin-bottom: 20px; }
 
   /* Stats two-col */
   .stats-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -1966,18 +1958,12 @@ input[type="date"].form-input {
     padding: 12px 12px calc(76px + env(safe-area-inset-bottom));
   }
   #page-dashboard {
-    padding-top: 12px;
-    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    padding: 14px 14px calc(76px + env(safe-area-inset-bottom));
   }
-  /* Dashboard mobile: cards go edge-to-edge (no side padding on card, use border-radius) */
-  .dash-card {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    padding: 14px 16px;
-  }
-  .greeting { padding: 0 14px; margin-bottom: 12px; }
-  .stats-row { padding: 0 14px; }
+  .stats-row { padding: 0; gap: 10px; margin-bottom: 0; }
+  .dash-main { gap: 10px; margin-top: 10px; }
+  .dash-card { border-radius: 12px; padding: 16px 18px; }
+  .greeting { padding: 0; margin-bottom: 12px; }
 
   /* Stats 2x2 */
   .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -2018,12 +2004,12 @@ input[type="date"].form-input {
     padding: 10px 10px calc(80px + env(safe-area-inset-bottom));
   }
   #page-dashboard {
-    padding-top: 10px;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    padding: 10px 10px calc(80px + env(safe-area-inset-bottom));
   }
-  .dash-card { padding: 12px 14px; }
-  .greeting { padding: 0 12px; }
-  .stats-row { padding: 0 12px; gap: 7px; margin-bottom: 8px; }
+  .stats-row { padding: 0; gap: 7px; margin-bottom: 0; }
+  .dash-main { gap: 7px; margin-top: 7px; }
+  .dash-card { border-radius: 10px; padding: 12px 14px; }
+  .greeting { padding: 0; margin-bottom: 10px; }
 
   /* Top bar */
   .top-bar { padding: 8px 12px; gap: 8px; }
