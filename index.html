@@ -33,10 +33,25 @@
   // Expose to global scope for use in non-module scripts
   window._fb = { auth, db, googleProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, signOut, onAuthStateChanged, sendPasswordResetEmail, doc, setDoc, getDoc, collection, getDocs, deleteDoc, writeBatch, onSnapshot, serverTimestamp };
 
-  // Auth state listener
+  // Auth state listener - retry if main script not yet ready
   onAuthStateChanged(auth, user => {
     window._fbUser = user;
-    if (window._onAuthReady) window._onAuthReady(user);
+    if (window._onAuthReady) {
+      window._onAuthReady(user);
+    } else {
+      // Main script not ready yet - poll until it is
+      let retries = 0;
+      const retry = setInterval(() => {
+        retries++;
+        if (window._onAuthReady) {
+          clearInterval(retry);
+          window._onAuthReady(user);
+        } else if (retries > 50) {
+          clearInterval(retry);
+          console.error('ConnieReads: _onAuthReady never set - JS error in main script?');
+        }
+      }, 100);
+    }
   });
 </script>
 
@@ -3169,7 +3184,7 @@ async function openScanner() {
     const rearCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
     const deviceId = rearCam?.deviceId;
 
-    statusEl.textContent = '🔍 Point camera at the ISBN barcode on the book's back cover...';
+    statusEl.textContent = "🔍 Point camera at the ISBN barcode on the book's back cover...";
 
     await zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
       if (result) {
