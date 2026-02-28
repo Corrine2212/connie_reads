@@ -105,6 +105,7 @@ async function handleISBNDetected(isbn) {
           title: olData.title || 'Unknown Title',
           author: 'Unknown',
           genre: pickGenre(olData.subjects || []),
+          genres: pickGenre(olData.subjects || []) ? [pickGenre(olData.subjects || [])] : [],
           pages: olData.number_of_pages || 0,
           description: '',
           isbn,
@@ -520,7 +521,7 @@ function openAddModal(prefill = null) {
   if (prefill) {
     document.getElementById('f-title').value = prefill.title || '';
     document.getElementById('f-author').value = prefill.author || '';
-    document.getElementById('f-genre').value = prefill.genre || '';
+    setGenresInForm(Array.isArray(prefill.genres) ? prefill.genres : prefill.genre ? [prefill.genre] : []);
     document.getElementById('f-isbn').value = prefill.isbn || '';
     document.getElementById('f-pages').value = prefill.pages || '';
     document.getElementById('cover-url-input').value = prefill.coverUrl || '';
@@ -534,12 +535,10 @@ function openAddModal(prefill = null) {
       document.getElementById('modal-book-desc-display').textContent = prefill.description || '';
     }
     // Silently fetch genre from Open Library if missing
-    if (!prefill.genre && prefill.isbn) {
+    const hasPrefillGenres = Array.isArray(prefill.genres) ? prefill.genres.length > 0 : !!prefill.genre;
+    if (!hasPrefillGenres && prefill.isbn) {
       fetchGenreFromOL(prefill.isbn).then(g => {
-        if (g) {
-          const field = document.getElementById('f-genre');
-          if (field && !field.value) field.value = g;
-        }
+        if (g && getGenresFromForm().length === 0) setGenresInForm([g]);
       });
     }
   }
@@ -557,7 +556,7 @@ function openEditModal(bookId) {
   document.getElementById('edit-book-id').value = bookId;
   document.getElementById('f-title').value = book.title || '';
   document.getElementById('f-author').value = book.author || '';
-  document.getElementById('f-genre').value = book.genre || '';
+  setGenresInForm(Array.isArray(book.genres) ? book.genres : book.genre ? [book.genre] : []);
   document.getElementById('f-isbn').value = book.isbn || '';
   document.getElementById('f-status').value = book.status || 'want';
   document.getElementById('f-date-read').value = book.dateRead || '';
@@ -640,8 +639,54 @@ function removeTag(tag) {
 }
 // ========== END TAG INPUT ==========
 
+// ========== GENRE CHIP INPUT ==========
+function setGenresInForm(genres) {
+  const chips  = document.getElementById('genre-chips');
+  const hidden = document.getElementById('f-genres');
+  if (!chips || !hidden) return;
+  hidden.value = genres.join('|||');
+  chips.innerHTML = genres.map(g =>
+    `<span class="tag-chip">${escHtml(g)}<span class="tag-chip-remove" onclick="removeGenre(${JSON.stringify(g)})">×</span></span>`
+  ).join('');
+}
+
+function getGenresFromForm() {
+  const hidden = document.getElementById('f-genres');
+  if (!hidden || !hidden.value) return [];
+  return hidden.value.split('|||').map(g => g.trim()).filter(Boolean);
+}
+
+function handleGenreInput(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,$/, '');
+    if (val) addGenre(val);
+    e.target.value = '';
+  } else if (e.key === 'Backspace' && e.target.value === '') {
+    const genres = getGenresFromForm();
+    if (genres.length) removeGenre(genres[genres.length - 1]);
+  }
+}
+
+function addGenre(genre) {
+  // Capitalise first letter of each word
+  const clean = genre.replace(/\b\w/g, c => c.toUpperCase()).trim();
+  const genres = getGenresFromForm();
+  if (!genres.includes(clean)) {
+    genres.push(clean);
+    setGenresInForm(genres);
+  }
+}
+
+function removeGenre(genre) {
+  setGenresInForm(getGenresFromForm().filter(g => g !== genre));
+}
+// ========== END GENRE CHIP INPUT ==========
+
+
+
 function clearBookForm() {
-  ['f-title','f-author','f-genre','f-isbn','f-date-read','f-date-started','f-notes','f-copies','f-borrowed-from','cover-url-input','f-pages','f-pages-read'].forEach(id => {
+  ['f-title','f-author','f-isbn','f-date-read','f-date-started','f-notes','f-copies','f-borrowed-from','cover-url-input','f-pages','f-pages-read'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -649,6 +694,10 @@ function clearBookForm() {
   document.getElementById('f-tags').value = '';
   document.getElementById('f-tags-input').value = '';
   document.getElementById('tag-chips').innerHTML = '';
+  document.getElementById('f-genres').value = '';
+  document.getElementById('genre-chips').innerHTML = '';
+  const gInput = document.getElementById('f-genre-input');
+  if (gInput) gInput.value = '';
   document.getElementById('own-physical').checked = false;
   document.getElementById('own-digital').checked = false;
   document.getElementById('own-borrowed').checked = false;
@@ -733,7 +782,7 @@ async function saveBook() {
   const bookData = {
     title,
     author: author || 'Unknown',
-    genre: document.getElementById('f-genre').value.trim(),
+    genres: getGenresFromForm(),
     isbn: document.getElementById('f-isbn').value.trim(),
     status: document.getElementById('f-status').value,
     dateRead: document.getElementById('f-date-read').value,
@@ -964,7 +1013,9 @@ async function searchHardcover(q) {
   // Fetch genres from Open Library for first 5 results (avoid flooding OL)
   for (const book of rawBooks.slice(0, 5)) {
     if (book.isbn && !book.genre) {
-      book.genre = await fetchGenreFromOL(book.isbn);
+      const g = await fetchGenreFromOL(book.isbn);
+      book.genre  = g;
+      book.genres = g ? [g] : [];
     }
   }
   return rawBooks;
@@ -985,6 +1036,7 @@ async function searchOpenLibrary(q) {
       title: doc.title || 'Unknown Title',
       author: (doc.author_name || []).join(', ') || 'Unknown',
       genre: pickGenre(doc.subject || []),
+      genres: pickGenre(doc.subject || []) ? [pickGenre(doc.subject || [])] : [],
       pages: doc.number_of_pages_median || 0,
       description: '',
       isbn,
@@ -1128,9 +1180,16 @@ function _doRenderLibrary() {
 
   const searchQ = (document.getElementById('lib-search')?.value || '').toLowerCase().trim();
 
+  // Helper: get genres array from a book (supports legacy string field)
+  const bookGenres = b => {
+    if (Array.isArray(b.genres) && b.genres.length) return b.genres;
+    if (b.genre && typeof b.genre === 'string') return b.genre.split(',').map(g => g.trim()).filter(Boolean);
+    return [];
+  };
+
   let filtered = books.filter(b => {
     // Text search
-    if (searchQ && ![b.title, b.author, b.genre, ...(b.tags||[])].some(s => (s||'').toLowerCase().includes(searchQ))) return false;
+    if (searchQ && ![b.title, b.author, ...bookGenres(b), ...(b.tags||[])].some(s => (s||'').toLowerCase().includes(searchQ))) return false;
     // Status
     if (fp.status !== 'all' && b.status !== fp.status) return false;
     // Ownership
@@ -1138,7 +1197,7 @@ function _doRenderLibrary() {
     if (fp.ownership.includes('digital') && !b.ownDigital) return false;
     if (fp.ownership.includes('borrowed') && !b.ownBorrowed) return false;
     // Genre
-    if (fp.genres.length && !fp.genres.includes(b.genre)) return false;
+    if (fp.genres.length && !fp.genres.some(g => bookGenres(b).includes(g))) return false;
     // Author
     if (fp.authors.length && !fp.authors.includes(b.author)) return false;
     // Tags
@@ -1236,7 +1295,13 @@ function _attachLibScroll() {
 
 function buildFilterOptions() {
   // Genres
-  const genres = [...new Set(books.map(b => b.genre).filter(Boolean))].sort();
+  // Flatten genres from all books (supports legacy string or new array)
+  const genreSet = new Set();
+  books.forEach(b => {
+    if (Array.isArray(b.genres)) b.genres.forEach(g => g && genreSet.add(g));
+    else if (b.genre) b.genre.split(',').map(g => g.trim()).filter(Boolean).forEach(g => genreSet.add(g));
+  });
+  const genres = [...genreSet].sort();
   const fpGenres = document.getElementById('fp-genres');
   if (fpGenres) {
     fpGenres.innerHTML = genres.map(g => `
@@ -1424,7 +1489,7 @@ function renderBookListItem(book, i) {
       <div class="book-list-cover">${bookCoverImg(book)}</div>
       <div class="book-list-info">
         <div class="book-list-title">${escHtml(book.title)}</div>
-        <div class="book-list-author">${escHtml(book.author)}${book.genre ? ` · ${escHtml(book.genre)}` : ''}</div>
+        <div class="book-list-author">${escHtml(book.author)}${(Array.isArray(book.genres)&&book.genres.length?book.genres:book.genre?[book.genre]:[]).map(g=>`<span style='color:var(--text-muted);'> · ${escHtml(g)}</span>`).join('')}</div>
         <div class="book-list-badges">
           <span class="status-badge status-${book.status}">${statusLabel(book.status)}</span>
           ${ownTags}
@@ -1480,7 +1545,7 @@ function openBookDetail(bookId) {
         <div style="font-family:'Lora',serif;font-size:14px;font-style:italic;color:var(--text-secondary);margin-bottom:10px;">${escHtml(book.author)}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
           <span class="status-badge status-${book.status}">${statusLabel(book.status)}</span>
-          ${book.genre ? `<span class="status-badge" style="background:var(--bg-elevated);color:var(--text-secondary);">${escHtml(book.genre)}</span>` : ''}
+          ${(Array.isArray(book.genres) && book.genres.length ? book.genres : book.genre ? [book.genre] : []).map(g => `<span class="status-badge" style="background:var(--bg-elevated);color:var(--text-secondary);">${escHtml(g)}</span>`).join('')}
         </div>
         <div style="color:var(--star);font-size:18px;margin-bottom:8px;">${stars}</div>
         ${book.pages ? `<div style="font-size:12px;color:var(--text-muted);">${book.pages} pages${book.pagesRead ? ` · ${book.pagesRead} read` : ''}</div>` : ''}
@@ -1729,7 +1794,11 @@ function renderStats() {
   document.getElementById('s-avg-rating').textContent = rated.length 
     ? (rated.reduce((s,b) => s + b.rating, 0) / rated.length).toFixed(1) + '★'
     : '—';
-  const genres = new Set(allBooks.map(b => b.genre).filter(Boolean));
+  const genres = new Set();
+  allBooks.forEach(b => {
+    if (Array.isArray(b.genres)) b.genres.forEach(g => g && genres.add(g));
+    else if (b.genre) b.genre.split(',').map(g=>g.trim()).filter(Boolean).forEach(g => genres.add(g));
+  });
   document.getElementById('s-genres').textContent = genres.size;
 
   // ---- Year chart ----
@@ -1779,7 +1848,10 @@ function renderStats() {
   // ---- Genre chart ----
   const genreCount = {};
   // Count genres from all books, not just read ones — Goodreads imports have genres on all statuses
-  allBooks.forEach(b => { if (b.genre) genreCount[b.genre] = (genreCount[b.genre]||0) + 1; });
+  allBooks.forEach(b => {
+    const gs = Array.isArray(b.genres) ? b.genres : (b.genre ? b.genre.split(',').map(g=>g.trim()).filter(Boolean) : []);
+    gs.forEach(g => { if (g) genreCount[g] = (genreCount[g]||0) + 1; });
+  });
   const topGenres = Object.entries(genreCount).sort((a,b) => b[1]-a[1]).slice(0,6);
   const maxGenre = topGenres[0]?.[1] || 1;
   const genreColors = ['var(--accent)','var(--green)','var(--blue)','var(--purple)','var(--red)','var(--star)'];
@@ -2126,7 +2198,12 @@ async function genreEnrichSaveAll() {
   for (const r of toSave) {
     const book = books.find(b => b.id === r.book.id);
     if (book) {
-      book.genre = r.genre;
+      // Save as array; merge with any existing genres
+      const existing = Array.isArray(book.genres) ? book.genres : (book.genre ? [book.genre] : []);
+      const newGenre = r.genre.trim();
+      if (newGenre && !existing.includes(newGenre)) existing.push(newGenre);
+      book.genres = existing;
+      book.genre = existing[0] || ''; // keep legacy field for compatibility
       await saveBookToFirestore(book);
       saved++;
     }
@@ -2259,7 +2336,7 @@ function importGoodreads(event) {
             title: title.trim(),
             // Goodreads stores "Last, First" — convert to "First Last"
             author: (author || 'Unknown').replace(/^([^,]+),\s*(.+)$/, '$2 $1').trim(),
-            genre: genreFromShelf,
+            genres: genreFromShelf ? [genreFromShelf] : [],
             tags: grTags,
             status, rating,
             dateRead: normDate(row['Date Read'] || ''),
