@@ -1304,21 +1304,22 @@ function buildFilterOptions() {
   const genres = [...genreSet].sort();
   const fpGenres = document.getElementById('fp-genres');
   if (fpGenres) {
-    fpGenres.innerHTML = genres.map(g => `
-      <button class="filter-chip-sm ${fp.genres.includes(g)?'active':''}" 
-        onclick="fpToggleGenre(${JSON.stringify(g)},this)">${escHtml(g)}</button>
-    `).join('') || '<span style="font-size:12px;color:var(--text-muted);">No genres yet</span>';
-  }
-  // Authors (top 10 by count)
-  const authorMap = {};
-  books.forEach(b => { if(b.author) authorMap[b.author] = (authorMap[b.author]||0)+1; });
-  const topAuthors = Object.entries(authorMap).sort((a,b)=>b[1]-a[1]).slice(0,12).map(e=>e[0]);
-  const fpAuthors = document.getElementById('fp-authors');
-  if (fpAuthors) {
-    fpAuthors.innerHTML = topAuthors.map(a => `
-      <button class="filter-chip-sm ${fp.authors.includes(a)?'active':''}" 
-        onclick="fpToggleAuthor(${JSON.stringify(a)},this)">${escHtml(a)}</button>
-    `).join('') || '<span style="font-size:12px;color:var(--text-muted);">No authors yet</span>';
+    if (genres.length) {
+      fpGenres.innerHTML = genres.map(g =>
+        `<button class="filter-chip-sm ${fp.genres.includes(g)?'active':''}" data-genre="${escHtml(g)}">${escHtml(g)}</button>`
+      ).join('');
+      fpGenres.onclick = e => {
+        const btn = e.target.closest('[data-genre]');
+        if (!btn) return;
+        const g = btn.dataset.genre;
+        const idx = fp.genres.indexOf(g);
+        if (idx >= 0) fp.genres.splice(idx, 1); else fp.genres.push(g);
+        btn.classList.toggle('active', fp.genres.includes(g));
+        renderLibrary();
+      };
+    } else {
+      fpGenres.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">No genres yet</span>';
+    }
   }
   // Tags
   const tagSet = new Set();
@@ -1326,10 +1327,22 @@ function buildFilterOptions() {
   const allTags = [...tagSet].sort();
   const fpTags = document.getElementById('fp-tags');
   if (fpTags) {
-    fpTags.innerHTML = allTags.map(t => `
-      <button class="filter-chip-sm ${fp.tags.includes(t)?'active':''}" 
-        onclick="fpToggleTag(${JSON.stringify(t)},this)">${escHtml(t)}</button>
-    `).join('') || '<span style="font-size:12px;color:var(--text-muted);">No tags yet</span>';
+    if (allTags.length) {
+      fpTags.innerHTML = allTags.map(t =>
+        `<button class="filter-chip-sm ${fp.tags.includes(t)?'active':''}" data-tag="${escHtml(t)}">${escHtml(t)}</button>`
+      ).join('');
+      fpTags.onclick = e => {
+        const btn = e.target.closest('[data-tag]');
+        if (!btn) return;
+        const t = btn.dataset.tag;
+        const idx = fp.tags.indexOf(t);
+        if (idx >= 0) fp.tags.splice(idx, 1); else fp.tags.push(t);
+        btn.classList.toggle('active', fp.tags.includes(t));
+        renderLibrary();
+      };
+    } else {
+      fpTags.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">No tags yet</span>';
+    }
   }
 }
 
@@ -1349,7 +1362,6 @@ function updateFilterBadge() {
   if (fp.status !== 'all') count++;
   count += fp.ownership.length;
   count += fp.genres.length;
-  count += fp.authors.length;
   count += fp.tags.length;
   if (fp.rating >= 0) count++;
   const searchQ = (document.getElementById('lib-search')?.value || '').trim();
@@ -1370,7 +1382,6 @@ function updateFilterBadge() {
     if (fp.status !== 'all') parts.push('Status: ' + fp.status);
     if (fp.ownership.length) parts.push('Format: ' + fp.ownership.join(', '));
     if (fp.genres.length) parts.push('Genre: ' + fp.genres.join(', '));
-    if (fp.authors.length) parts.push('Author: ' + fp.authors.slice(0,2).join(', ') + (fp.authors.length>2?'…':''));
     if (fp.tags.length) parts.push('Tags: ' + fp.tags.join(', '));
     if (fp.rating === 0) parts.push('Unrated');
     else if (fp.rating > 0) parts.push(fp.rating+'★+');
@@ -1418,29 +1429,7 @@ function setOwnershipFilter(own) {
   renderLibrary();
 }
 
-function fpToggleGenre(genre, el) {
-  const idx = fp.genres.indexOf(genre);
-  if (idx >= 0) fp.genres.splice(idx, 1);
-  else fp.genres.push(genre);
-  el.classList.toggle('active', fp.genres.includes(genre));
-  renderLibrary();
-}
-
-function fpToggleAuthor(author, el) {
-  const idx = fp.authors.indexOf(author);
-  if (idx >= 0) fp.authors.splice(idx, 1);
-  else fp.authors.push(author);
-  el.classList.toggle('active', fp.authors.includes(author));
-  renderLibrary();
-}
-
-function fpToggleTag(tag, el) {
-  const idx = fp.tags.indexOf(tag);
-  if (idx >= 0) fp.tags.splice(idx, 1);
-  else fp.tags.push(tag);
-  el.classList.toggle('active', fp.tags.includes(tag));
-  renderLibrary();
-}
+// genre/tag filter toggling handled by event delegation in buildFilterOptions
 
 function fpSetRating(rating, el) {
   fp.rating = fp.rating === rating ? -1 : rating;
@@ -1450,7 +1439,7 @@ function fpSetRating(rating, el) {
 }
 
 function clearAllFilters() {
-  fp.status = 'all'; fp.ownership = []; fp.genres = []; fp.authors = []; fp.tags = []; fp.rating = -1;
+  fp.status = 'all'; fp.ownership = []; fp.genres = []; fp.authors = []; fp.tags = []; fp.rating = -1; // authors kept for compat but not shown in UI
   const si = document.getElementById('lib-search');
   if (si) si.value = '';
   document.querySelectorAll('#filter-panel .filter-chip-sm').forEach(b => b.classList.remove('active'));

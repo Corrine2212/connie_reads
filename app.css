@@ -1854,15 +1854,6 @@ input[type="date"].form-input {
 .own-pill:hover { border-color: var(--accent); }
 
 /* ========== FILTER PANEL ========== */
-.filter-panel {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 12px;
-  display: none;
-}
-.filter-panel.open { display: block; }
 .fp-section {
   margin-bottom: 14px;
 }
@@ -2560,15 +2551,17 @@ input[type="date"].form-input {
   padding: 0 2px;
 }
 .tag-chip-remove:hover { opacity: 1; }
-.tag-text-input {
+.tag-text-input,
+.tag-inner-input {
   border: none;
   background: none;
   outline: none;
   font-size: 13px;
   color: var(--text-primary);
-  min-width: 140px;
+  min-width: 120px;
   flex: 1;
   padding: 2px 0;
+  font-family: inherit;
 }
 .tag-display {
   display: flex;
