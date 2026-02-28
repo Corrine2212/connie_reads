@@ -3139,178 +3139,178 @@ function parseCSV(text) {
 }
 
 
-// ========== BARCODE SCANNER ==========
-let scannerStream = null;
-let scannerAnimFrame = null;
-let scannedBookData = null;
-let zxingReader = null;
-let zxingLoaded = false;
+// // ========== BARCODE SCANNER ==========
+// let scannerStream = null;
+// let scannerAnimFrame = null;
+// let scannedBookData = null;
+// let zxingReader = null;
+// let zxingLoaded = false;
 
-async function loadZXing() {
-  if (zxingLoaded && window.ZXing) return true;
-  return new Promise(resolve => {
-    const s = document.createElement('script');
-    // ZXing-js: reads EAN-13 (ISBN barcodes) and QR codes
-    s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js';
-    s.onload = () => { zxingLoaded = true; resolve(true); };
-    s.onerror = () => resolve(false);
-    document.head.appendChild(s);
-  });
-}
+// async function loadZXing() {
+//   if (zxingLoaded && window.ZXing) return true;
+//   return new Promise(resolve => {
+//     const s = document.createElement('script');
+//     // ZXing-js: reads EAN-13 (ISBN barcodes) and QR codes
+//     s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js';
+//     s.onload = () => { zxingLoaded = true; resolve(true); };
+//     s.onerror = () => resolve(false);
+//     document.head.appendChild(s);
+//   });
+// }
 
-async function openScanner() {
-  openModal('scanner-modal');
-  const statusEl = document.getElementById('scanner-status');
-  const resultEl = document.getElementById('scanner-result');
-  const addBtn = document.getElementById('scanner-add-btn');
-  statusEl.textContent = '📷 Loading barcode reader...';
-  resultEl.style.display = 'none';
-  addBtn.style.display = 'none';
-  scannedBookData = null;
+// async function openScanner() {
+//   openModal('scanner-modal');
+//   const statusEl = document.getElementById('scanner-status');
+//   const resultEl = document.getElementById('scanner-result');
+//   const addBtn = document.getElementById('scanner-add-btn');
+//   statusEl.textContent = '📷 Loading barcode reader...';
+//   resultEl.style.display = 'none';
+//   addBtn.style.display = 'none';
+//   scannedBookData = null;
 
-  const loaded = await loadZXing();
-  if (!loaded || !window.ZXing) {
-    statusEl.textContent = '❌ Could not load barcode library. Check your connection.';
-    return;
-  }
+//   const loaded = await loadZXing();
+//   if (!loaded || !window.ZXing) {
+//     statusEl.textContent = '❌ Could not load barcode library. Check your connection.';
+//     return;
+//   }
 
-  try {
-    // ZXing browser multi-format reader - handles EAN-13 (ISBN barcodes)
-    zxingReader = new ZXing.BrowserMultiFormatReader();
-    const video = document.getElementById('scanner-video');
+//   try {
+//     // ZXing browser multi-format reader - handles EAN-13 (ISBN barcodes)
+//     zxingReader = new ZXing.BrowserMultiFormatReader();
+//     const video = document.getElementById('scanner-video');
 
-    // Get rear camera on mobile
-    const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
-    const rearCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
-    const deviceId = rearCam?.deviceId;
+//     // Get rear camera on mobile
+//     const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+//     const rearCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
+//     const deviceId = rearCam?.deviceId;
 
-    statusEl.textContent = "🔍 Point camera at the ISBN barcode on the book's back cover...";
+//     statusEl.textContent = "🔍 Point camera at the ISBN barcode on the book's back cover...";
 
-    await zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
-      if (result) {
-        const text = result.getText();
-        // Accept EAN-13 (978/979 prefix = book ISBN), EAN-10, or pure numeric 13-digit
-        const clean = text.replace(/[^0-9X]/gi, '');
-        if (clean.length === 13 || clean.length === 10) {
-          handleISBNDetected(clean);
-        }
-      }
-      // Ignore DecodeHintType errors - they're normal during scanning
-    });
+//     await zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
+//       if (result) {
+//         const text = result.getText();
+//         // Accept EAN-13 (978/979 prefix = book ISBN), EAN-10, or pure numeric 13-digit
+//         const clean = text.replace(/[^0-9X]/gi, '');
+//         if (clean.length === 13 || clean.length === 10) {
+//           handleISBNDetected(clean);
+//         }
+//       }
+//       // Ignore DecodeHintType errors - they're normal during scanning
+//     });
 
-    scannerStream = { stop: () => zxingReader.reset() };
+//     scannerStream = { stop: () => zxingReader.reset() };
 
-  } catch(e) {
-    console.error('Scanner error:', e);
-    if (e.name === 'NotAllowedError' || e.message?.includes('Permission')) {
-      statusEl.textContent = '🚫 Camera access denied. Please allow camera in your browser settings.';
-    } else if (e.name === 'NotFoundError') {
-      statusEl.textContent = '📷 No camera found. Please use a device with a camera.';
-    } else {
-      statusEl.textContent = '❌ Camera error: ' + (e.message || 'Unknown error');
-    }
-  }
-}
+//   } catch(e) {
+//     console.error('Scanner error:', e);
+//     if (e.name === 'NotAllowedError' || e.message?.includes('Permission')) {
+//       statusEl.textContent = '🚫 Camera access denied. Please allow camera in your browser settings.';
+//     } else if (e.name === 'NotFoundError') {
+//       statusEl.textContent = '📷 No camera found. Please use a device with a camera.';
+//     } else {
+//       statusEl.textContent = '❌ Camera error: ' + (e.message || 'Unknown error');
+//     }
+//   }
+// }
 
-function startScanning() { /* handled by ZXing decode loop */ }
+// function startScanning() { /* handled by ZXing decode loop */ }
 
-async function handleISBNDetected(isbn) {
-  clearInterval(scannerInterval);
-  stopCamera();
-  document.getElementById('scanner-status').textContent = '✅ Barcode detected!';
-  document.getElementById('scanner-isbn-display').textContent = isbn;
-  document.getElementById('scanner-result').style.display = 'block';
-  document.getElementById('scanner-book-preview').textContent = 'Looking up book...';
+// async function handleISBNDetected(isbn) {
+//   clearInterval(scannerInterval);
+//   stopCamera();
+//   document.getElementById('scanner-status').textContent = '✅ Barcode detected!';
+//   document.getElementById('scanner-isbn-display').textContent = isbn;
+//   document.getElementById('scanner-result').style.display = 'block';
+//   document.getElementById('scanner-book-preview').textContent = 'Looking up book...';
 
-  try {
-    // Try Hardcover first for ISBN lookup
-    let found = null;
-    try {
-      const hcQuery = `query { books(where: {default_physical_edition: {isbn_13: {_eq: "${isbn}"}}}, limit: 1) {
-        id title contributions { author { name } }
-        default_physical_edition { isbn_13 isbn_10 pages_count publisher { name } image { url } }
-        cached_image { url } description
-      }}`;
-      const hcRes = await fetch('https://api.hardcover.app/v1/graphql', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: hcQuery })
-      });
-      const hcData = await hcRes.json();
-      const b = hcData?.data?.books?.[0];
-      if (b) {
-        const ed = b.default_physical_edition;
-        found = {
-          id: String(b.id),
-          title: b.title,
-          author: (b.contributions||[]).map(c => c.author?.name).filter(Boolean).join(', ') || 'Unknown',
-          genre: '',
-          pages: ed?.pages_count || 0,
-          description: b.description || '',
-          isbn: ed?.isbn_13 || isbn,
-          publisher: ed?.publisher?.name || '',
-          coverUrl: b.cached_image?.url || ed?.image?.url || '',
-        };
-      }
-    } catch(e) { console.warn('Hardcover ISBN lookup failed'); }
+//   try {
+//     // Try Hardcover first for ISBN lookup
+//     let found = null;
+//     try {
+//       const hcQuery = `query { books(where: {default_physical_edition: {isbn_13: {_eq: "${isbn}"}}}, limit: 1) {
+//         id title contributions { author { name } }
+//         default_physical_edition { isbn_13 isbn_10 pages_count publisher { name } image { url } }
+//         cached_image { url } description
+//       }}`;
+//       const hcRes = await fetch('https://api.hardcover.app/v1/graphql', {
+//         method: 'POST', headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ query: hcQuery })
+//       });
+//       const hcData = await hcRes.json();
+//       const b = hcData?.data?.books?.[0];
+//       if (b) {
+//         const ed = b.default_physical_edition;
+//         found = {
+//           id: String(b.id),
+//           title: b.title,
+//           author: (b.contributions||[]).map(c => c.author?.name).filter(Boolean).join(', ') || 'Unknown',
+//           genre: '',
+//           pages: ed?.pages_count || 0,
+//           description: b.description || '',
+//           isbn: ed?.isbn_13 || isbn,
+//           publisher: ed?.publisher?.name || '',
+//           coverUrl: b.cached_image?.url || ed?.image?.url || '',
+//         };
+//       }
+//     } catch(e) { console.warn('Hardcover ISBN lookup failed'); }
 
-    // Fall back to Open Library
-    if (!found) {
-      const olRes = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
-      if (olRes.ok) {
-        const olData = await olRes.json();
-        const coverId = olData.covers?.[0];
-        found = {
-          id: isbn,
-          title: olData.title || 'Unknown Title',
-          author: 'Unknown',
-          genre: '',
-          pages: olData.number_of_pages || 0,
-          description: '',
-          isbn,
-          publisher: (olData.publishers||[])[0] || '',
-          coverUrl: coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` :
-                    `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`,
-        };
-      }
-    }
+//     // Fall back to Open Library
+//     if (!found) {
+//       const olRes = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
+//       if (olRes.ok) {
+//         const olData = await olRes.json();
+//         const coverId = olData.covers?.[0];
+//         found = {
+//           id: isbn,
+//           title: olData.title || 'Unknown Title',
+//           author: 'Unknown',
+//           genre: '',
+//           pages: olData.number_of_pages || 0,
+//           description: '',
+//           isbn,
+//           publisher: (olData.publishers||[])[0] || '',
+//           coverUrl: coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` :
+//                     `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`,
+//         };
+//       }
+//     }
 
-    if (found) {
-      scannedBookData = found;
-      document.getElementById('scanner-book-preview').textContent =
-        `"${scannedBookData.title}" by ${scannedBookData.author}`;
-      document.getElementById('scanner-add-btn').style.display = 'flex';
-    } else {
-      document.getElementById('scanner-book-preview').textContent =
-        'Book not found in database. You can still add it manually.';
-      scannedBookData = { isbn, title: '', author: '', coverUrl: '' };
-      document.getElementById('scanner-add-btn').style.display = 'flex';
-    }
-  } catch(e) {
-    document.getElementById('scanner-book-preview').textContent = 'Lookup failed — check your connection.';
-  }
-}
+//     if (found) {
+//       scannedBookData = found;
+//       document.getElementById('scanner-book-preview').textContent =
+//         `"${scannedBookData.title}" by ${scannedBookData.author}`;
+//       document.getElementById('scanner-add-btn').style.display = 'flex';
+//     } else {
+//       document.getElementById('scanner-book-preview').textContent =
+//         'Book not found in database. You can still add it manually.';
+//       scannedBookData = { isbn, title: '', author: '', coverUrl: '' };
+//       document.getElementById('scanner-add-btn').style.display = 'flex';
+//     }
+//   } catch(e) {
+//     document.getElementById('scanner-book-preview').textContent = 'Lookup failed — check your connection.';
+//   }
+// }
 
-function addScannedBook() {
-  if (!scannedBookData) return;
-  closeScanner();
-  openAddModal(scannedBookData);
-}
+// function addScannedBook() {
+//   if (!scannedBookData) return;
+//   closeScanner();
+//   openAddModal(scannedBookData);
+// }
 
-function stopCamera() {
-  cancelAnimationFrame(scannerAnimFrame);
-  if (zxingReader) { try { zxingReader.reset(); } catch(e){} zxingReader = null; }
-  if (scannerStream && scannerStream.getTracks) {
-    scannerStream.getTracks().forEach(t => t.stop());
-  }
-  scannerStream = null;
-}
+// function stopCamera() {
+//   cancelAnimationFrame(scannerAnimFrame);
+//   if (zxingReader) { try { zxingReader.reset(); } catch(e){} zxingReader = null; }
+//   if (scannerStream && scannerStream.getTracks) {
+//     scannerStream.getTracks().forEach(t => t.stop());
+//   }
+//   scannerStream = null;
+// }
 
-function closeScanner() {
-  stopCamera();
-  closeModal('scanner-modal');
-}
+// function closeScanner() {
+//   stopCamera();
+//   closeModal('scanner-modal');
+// }
 
-// ========== END BARCODE SCANNER ==========
+// // ========== END BARCODE SCANNER ==========
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded', () => {
   loadLocal();
