@@ -1547,8 +1547,12 @@ function openBookDetail(bookId) {
     ${(book.tags||[]).length ? `<div style="margin-bottom:12px;"><span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Tags</span><div class="tag-display" style="margin-top:5px;">${book.tags.map(t=>`<span class="tag-badge">${escHtml(t)}</span>`).join('')}</div></div>` : ''}
     ${book.description ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;padding:14px;background:var(--bg-elevated);border-radius:9px;">${escHtml(book.description.substring(0,400))}${book.description.length > 400 ? '...' : ''}</div>` : ''}
     ${book.notes ? `<div style="margin-top:16px;"><div style="font-size:12px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Notes & Review</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;padding:14px;background:var(--bg-elevated);border-radius:9px;">${escHtml(book.notes)}</div></div>` : ''}
+    ${renderReadsSection(book)}
   `;
   document.getElementById('detail-edit-btn').onclick = () => { closeModal('book-detail-modal'); openEditModal(bookId); };
+  // wire add-reread button
+  const rrBtn = document.getElementById('add-reread-btn');
+  if (rrBtn) rrBtn.onclick = () => openAddRereadModal(bookId);
   openModal('book-detail-modal');
 }
 
@@ -1670,7 +1674,9 @@ function addActivity(text, icon, color) {
 function refreshDashboard() {
   const year = new Date().getFullYear();
   const readBooks = books.filter(b => b.status === 'read');
-  const readThisYear = readBooks.filter(b => b.dateRead && b.dateRead.startsWith(year.toString()));
+  // Count every individual read event (including re-reads) for goal + this-year stats
+  const allEvents = getAllReadEvents(books);
+  const readThisYear = allEvents.filter(e => e.dateRead && e.dateRead.startsWith(year.toString()));
   const reading = books.filter(b => b.status === 'reading');
   const want = books.filter(b => b.status === 'want');
 
@@ -1774,14 +1780,138 @@ function updateLibCount() {
 }
 
 // ---- STATS ----
+// ─── RE-READ UI ────────────────────────────────────────────────────
+function renderReadsSection(book) {
+  const reads = getReads(book);
+  if (book.status !== 'read' || reads.length === 0) return '';
+
+  const readRows = reads.map((r, i) => {
+    const isLatest = i === reads.length - 1;
+    const label = reads.length === 1 ? 'Read' : (i === 0 ? '1st read' : `Re-read ${i}`);
+    const stars = r.rating ? '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) : '—';
+    return `
+      <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="font-weight:500;color:var(--text-secondary);min-width:70px;">${label}</span>
+        <span style="color:var(--text-muted);flex:1;">${r.dateRead || 'No date'}</span>
+        <span style="color:var(--star);letter-spacing:1px;">${stars}</span>
+        ${reads.length > 1 ? `<button onclick="deleteRead('${book.id}',${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:0 2px;" title="Remove this read">×</button>` : ''}
+      </div>`;
+  }).join('');
+
+  return `
+    <div style="margin-top:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;">Reading History</div>
+        <button id="add-reread-btn" style="font-size:12px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);cursor:pointer;font-family:inherit;">+ Log re-read</button>
+      </div>
+      <div style="background:var(--bg-elevated);border-radius:9px;padding:4px 12px;">${readRows}</div>
+    </div>`;
+}
+
+let _rereadTargetId = null;
+let _rereadRating = 0;
+
+function openAddRereadModal(bookId) {
+  _rereadTargetId = bookId;
+  _rereadRating = 0;
+  document.getElementById('rr-date-read').value = new Date().toISOString().slice(0,10);
+  document.getElementById('rr-date-started').value = '';
+  document.getElementById('rr-notes').value = '';
+  updateRereadStars(0);
+  openModal('reread-modal');
+}
+
+function updateRereadStars(rating) {
+  _rereadRating = rating;
+  document.querySelectorAll('#rr-stars .rr-star').forEach((s, i) => {
+    s.textContent = i < rating ? '★' : '☆';
+    s.style.color = i < rating ? 'var(--star)' : 'var(--text-muted)';
+  });
+}
+
+async function saveReread() {
+  const book = books.find(b => b.id === _rereadTargetId);
+  if (!book) return;
+
+  const dateRead    = document.getElementById('rr-date-read').value;
+  const dateStarted = document.getElementById('rr-date-started').value;
+  const notes       = document.getElementById('rr-notes').value.trim();
+
+  // Build reads array, migrating legacy fields if needed
+  const existingReads = Array.isArray(book.reads) && book.reads.length
+    ? book.reads
+    : [{ dateRead: book.dateRead || '', dateStarted: book.dateStarted || '', rating: book.rating || 0, notes: book.notes || '' }];
+
+  const newRead = { dateRead, dateStarted, rating: _rereadRating, notes };
+  book.reads     = [...existingReads, newRead];
+  // Update top-level fields to reflect the latest read
+  book.dateRead    = dateRead;
+  book.dateStarted = dateStarted;
+  if (_rereadRating) book.rating = _rereadRating;
+
+  closeModal('reread-modal');
+  await saveBookToFirestore(book);
+  showToast('Re-read logged ✓', 'success');
+  refreshDashboard();
+  openBookDetail(_rereadTargetId); // refresh detail view
+}
+
+async function deleteRead(bookId, index) {
+  const book = books.find(b => b.id === bookId);
+  if (!book) return;
+  const reads = getReads(book);
+  if (reads.length <= 1) { showToast("Can't remove the only read — edit the book instead", 'info'); return; }
+  if (!confirm('Remove this read entry?')) return;
+  reads.splice(index, 1);
+  book.reads = reads;
+  // Update top-level to latest remaining read
+  const latest = reads[reads.length - 1];
+  book.dateRead    = latest.dateRead;
+  book.dateStarted = latest.dateStarted;
+  book.rating      = latest.rating;
+  await saveBookToFirestore(book);
+  showToast('Read entry removed', 'info');
+  openBookDetail(bookId);
+}
+// ────────────────────────────────────────────────────────────────────
+
+// ─── RE-READ HELPERS ───────────────────────────────────────────────
+// Returns array of all read entries for a book.
+// Legacy books have dateRead/dateStarted/rating at top level.
+// New books have a `reads: [{dateRead, dateStarted, rating, notes}]` array.
+function getReads(book) {
+  if (Array.isArray(book.reads) && book.reads.length) return book.reads;
+  // Migrate legacy fields on the fly (never writes back — just for display/counting)
+  if (book.dateRead || book.status === 'read') {
+    return [{ dateRead: book.dateRead || '', dateStarted: book.dateStarted || '', rating: book.rating || 0, notes: book.notes || '' }];
+  }
+  return [];
+}
+
+// Flattened list of every individual read across all books, with book reference
+function getAllReadEvents(booksArr) {
+  const events = [];
+  booksArr.forEach(book => {
+    getReads(book).forEach(r => {
+      if (r.dateRead || book.status === 'read') events.push({ book, ...r });
+    });
+  });
+  return events;
+}
+// ───────────────────────────────────────────────────────────────────
+
 function renderStats() {
   const readBooks = books.filter(b => b.status === 'read');
-  const allBooks = books;
+  const allBooks  = books;
+  // All individual read events (counts re-reads)
+  const allReadEvents = getAllReadEvents(books);
   document.getElementById('s-total').textContent = allBooks.length;
-  document.getElementById('s-read').textContent = readBooks.length;
-  const rated = readBooks.filter(b => b.rating && b.rating > 0);
+  // Show unique books read, with re-read count in parentheses if any
+  const rereadCount = allReadEvents.length - readBooks.length;
+  document.getElementById('s-read').textContent = readBooks.length + (rereadCount > 0 ? ` (+${rereadCount} re-reads)` : '');
+  const rated = allReadEvents.filter(e => e.rating && e.rating > 0);
   document.getElementById('s-avg-rating').textContent = rated.length 
-    ? (rated.reduce((s,b) => s + b.rating, 0) / rated.length).toFixed(1) + '★'
+    ? (rated.reduce((s,e) => s + e.rating, 0) / rated.length).toFixed(1) + '★'
     : '—';
   const genres = new Set();
   allBooks.forEach(b => {
@@ -1794,17 +1924,17 @@ function renderStats() {
   const yearCounts = {};
   const curYear = new Date().getFullYear();
   for (let y = curYear - 4; y <= curYear; y++) yearCounts[y] = 0;
-  readBooks.forEach(b => {
-    if (b.dateRead) {
-      const y = parseInt(b.dateRead.substring(0, 4));
+  allReadEvents.forEach(e => {
+    if (e.dateRead) {
+      const y = parseInt(e.dateRead.substring(0, 4));
       if (!isNaN(y) && yearCounts[y] !== undefined) yearCounts[y]++;
     }
   });
   // If no yearCounts have data, expand range to show all years with data
   if (Object.values(yearCounts).every(v => v === 0)) {
-    readBooks.forEach(b => {
-      if (b.dateRead) {
-        const y = parseInt(b.dateRead.substring(0, 4));
+    allReadEvents.forEach(e => {
+      if (e.dateRead) {
+        const y = parseInt(e.dateRead.substring(0, 4));
         if (!isNaN(y) && y > 2000 && y <= curYear) yearCounts[y] = (yearCounts[y] || 0) + 1;
       }
     });
@@ -1820,9 +1950,9 @@ function renderStats() {
   // ---- Monthly chart (current year) ----
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const monthlyCounts = new Array(12).fill(0);
-  readBooks.forEach(b => {
-    if (b.dateRead && b.dateRead.startsWith(curYear.toString())) {
-      const m = parseInt(b.dateRead.substring(5, 7)) - 1;
+  allReadEvents.forEach(e => {
+    if (e.dateRead && e.dateRead.startsWith(curYear.toString())) {
+      const m = parseInt(e.dateRead.substring(5, 7)) - 1;
       if (m >= 0 && m < 12) monthlyCounts[m]++;
     }
   });
@@ -1918,16 +2048,17 @@ function renderStats() {
     : '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No read books yet</div>';
 
   // ---- Reading Summary ----
-  const totalPages = readBooks.reduce((s, b) => s + (b.pages || 0), 0);
-  const thisYearBooks = readBooks.filter(b => b.dateRead && b.dateRead.startsWith(curYear.toString()));
-  const booksWithDates = readBooks.filter(b => b.dateStarted && b.dateRead);
+  // Pages: sum from all read events (use book.pages for each event, avoid double-counting with fallback)
+  const totalPages = allReadEvents.reduce((s, e) => s + (e.book.pages || 0), 0);
+  const thisYearBooks = allReadEvents.filter(e => e.dateRead && e.dateRead.startsWith(curYear.toString()));
+  const eventsWithDates = allReadEvents.filter(e => e.dateStarted && e.dateRead);
   let avgDays = 0;
-  if (booksWithDates.length) {
-    const totalDays = booksWithDates.reduce((s, b) => {
-      const diff = (new Date(b.dateRead) - new Date(b.dateStarted)) / 86400000;
+  if (eventsWithDates.length) {
+    const totalDays = eventsWithDates.reduce((s, e) => {
+      const diff = (new Date(e.dateRead) - new Date(e.dateStarted)) / 86400000;
       return s + (diff > 0 ? diff : 0);
     }, 0);
-    avgDays = Math.round(totalDays / booksWithDates.length);
+    avgDays = Math.round(totalDays / eventsWithDates.length);
   }
   document.getElementById('reading-summary').innerHTML = `
     <div class="time-stat-box">
