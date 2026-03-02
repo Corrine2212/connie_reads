@@ -1127,6 +1127,7 @@ a { color: inherit; text-decoration: none; }
   animation: fadeIn 0.2s ease;
 }
 .modal-overlay.open { display: flex; }
+#reread-modal { z-index: 1010; } /* above book-detail-modal */
 .modal {
   background: var(--bg-surface);
   border: 1px solid var(--border);
