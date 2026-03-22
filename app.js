@@ -461,7 +461,8 @@ function showPage(page) {
   if (page === 'library') { _libScrollBound = false; renderLibrary(); }
   if (page === 'collections') renderCollections();
   if (page === 'stats') renderStats();
-  if (page === 'settings') genreEnrichInit();
+  if (page === 'rankings') renderRankings();
+  if (page === 'settings') { genreEnrichInit(); ownAdminInit(); }
 }
 
 function toggleSidebar() {
@@ -804,17 +805,22 @@ async function saveBook() {
 
   closeModal('book-modal');
 
+  let savedId = null;
   if (editingBookId) {
     const existing = books.find(b => b.id === editingBookId);
     const updated = { ...existing, ...bookData, updatedAt: Date.now() };
+    savedId = editingBookId;
     await saveBookToFirestore(updated);
     showToast(`"${title}" updated`, 'success');
     addActivity(`Updated <strong>${title}</strong>`, '✏️', '#6a9bbf');
+    if (updated.status === 'read' && updated.rating > 0) maybeStartRanking(savedId);
   } else {
     const book = { id: genId(), ...bookData, dateAdded: Date.now() };
+    savedId = book.id;
     await saveBookToFirestore(book);
     showToast(`"${title}" added to library`, 'success');
     addActivity(`Added <strong>${title}</strong> by ${author || 'Unknown'}`, '📚', '#d4884a');
+    if (book.status === 'read' && book.rating > 0) maybeStartRanking(savedId);
   }
 }
 
@@ -1451,6 +1457,7 @@ function clearAllFilters() {
 
 function renderBookCard(book, i) {
   const stars = book.rating ? '★'.repeat(book.rating) : '';
+  const rankBadge = book.rankScore && book.rating ? `<span class="rank-score">${eloToDisplay(book.rankScore, book.rating)}</span>` : '';
   const ownerBadge = book.ownBorrowed ? '<div class="cover-badge borrowed">B</div>'
     : (book.ownPhysical || book.ownDigital) ? '<div class="cover-badge owned">✓</div>' : '';
   const tagsHtml = (book.tags||[]).length
@@ -1461,7 +1468,7 @@ function renderBookCard(book, i) {
     <div class="book-cover-lg">${bookCoverImg(book)}${ownerBadge}</div>
     <div class="book-card-title">${escHtml(book.title)}</div>
     <div class="book-card-author">${escHtml(book.author)}</div>
-    <div class="book-card-meta"><span class="status-badge status-${book.status}">${statusLabel(book.status)}</span>${stars ? `<span class="stars-small">${stars}</span>` : ''}</div>
+    <div class="book-card-meta"><span class="status-badge status-${book.status}">${statusLabel(book.status)}</span>${stars ? `<span class="stars-small">${stars}</span>` : ''}${rankBadge}</div>
     ${tagsHtml}
   </div>`;
 }
@@ -1536,7 +1543,7 @@ function openBookDetail(bookId) {
           <span class="status-badge status-${book.status}">${statusLabel(book.status)}</span>
           ${(Array.isArray(book.genres) && book.genres.length ? book.genres : book.genre ? [book.genre] : []).map(g => `<span class="status-badge" style="background:var(--bg-elevated);color:var(--text-secondary);">${escHtml(g)}</span>`).join('')}
         </div>
-        <div style="color:var(--star);font-size:18px;margin-bottom:8px;">${stars}</div>
+        <div style="color:var(--star);font-size:18px;margin-bottom:8px;">${stars}${book.rankScore && book.rating ? `<span class="rank-score" style="font-size:13px;vertical-align:middle;margin-left:6px;">${eloToDisplay(book.rankScore, book.rating)}</span>` : ''}</div>
         ${book.pages ? `<div style="font-size:12px;color:var(--text-muted);">${book.pages} pages${book.pagesRead ? ` · ${book.pagesRead} read` : ''}</div>` : ''}
         ${progress ? `<div style="margin-top:8px;"><div style="height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden;width:150px;"><div style="height:100%;background:var(--accent);width:${progress}%;border-radius:2px;"></div></div><div style="font-size:11px;color:var(--text-muted);margin-top:3px;">${progress}% read</div></div>` : ''}
       </div>
@@ -1853,7 +1860,9 @@ async function saveReread() {
   await saveBookToFirestore(book);
   showToast('Re-read logged ✓', 'success');
   refreshDashboard();
-  openBookDetail(_rereadTargetId); // refresh detail view
+  openBookDetail(_rereadTargetId);
+  // Re-ranking makes sense after a re-read
+  if (_rereadRating > 0) maybeStartRanking(_rereadTargetId);
 }
 
 async function deleteRead(bookId, index) {
@@ -1919,6 +1928,8 @@ function renderStats() {
     else if (b.genre) b.genre.split(',').map(g=>g.trim()).filter(Boolean).forEach(g => genres.add(g));
   });
   document.getElementById('s-genres').textContent = genres.size;
+  document.getElementById('s-physical').textContent = books.filter(b => b.ownPhysical).length;
+  document.getElementById('s-digital').textContent  = books.filter(b => b.ownDigital).length;
 
   // ---- Year chart ----
   const yearCounts = {};
@@ -2355,6 +2366,279 @@ function genreEnrichReset() {
   genreEnrichInit();
 }
 
+
+// ════════════════════════════════════════════════════════════
+// ELO RANKING SYSTEM
+// Each book gets a `rankScore` per star tier.
+// Starting score = 1500. K-factor = 64 (fast settling).
+// Comparisons only happen within the same star tier.
+// ════════════════════════════════════════════════════════════
+
+const ELO_K = 64;
+const ELO_START = 1500;
+
+// Convert raw Elo score to a display score within a tier
+// e.g. 5-star: 1500 base → displayed as "5.0", higher → "5.1"…"5.9"
+function eloToDisplay(score, tier) {
+  // Clamp to reasonable range and map to tier.0–tier.9
+  const norm = Math.max(0, Math.min(1, (score - 1200) / 600));
+  return (tier + norm * 0.9).toFixed(1);
+}
+
+function expectedScore(rA, rB) {
+  return 1 / (1 + Math.pow(10, (rB - rA) / 400));
+}
+
+function newElo(rA, rB, scoreA) {
+  // scoreA: 1 = A won, 0 = B won, 0.5 = draw
+  const exp = expectedScore(rA, rB);
+  return Math.round(rA + ELO_K * (scoreA - exp));
+}
+
+// Get read books in a given star tier
+function getBooksInTier(tier) {
+  return books.filter(b => b.status === 'read' && (b.rating || 0) === tier);
+}
+
+// ── Head-to-head session state ──
+let _hthQueue   = [];   // array of [bookA, bookB] pairs to compare
+let _hthNewBook = null; // the newly-rated book being ranked
+let _hthIdx     = 0;
+let _hthTotal   = 0;
+
+function startRankingSession(bookId) {
+  const book = books.find(b => b.id === bookId);
+  if (!book || book.status !== 'read' || !book.rating) return;
+
+  const tier = book.rating;
+  const peers = getBooksInTier(tier).filter(b => b.id !== bookId);
+  if (peers.length === 0) {
+    // No peers to compare against — just set starting score
+    if (!book.rankScore) {
+      book.rankScore = ELO_START;
+      saveBookToFirestore(book);
+    }
+    showToast('First book at this rating — ranked automatically!', 'info');
+    return;
+  }
+
+  // Pick up to 5 random peers to compare against
+  const shuffled = peers.sort(() => Math.random() - 0.5).slice(0, 5);
+  _hthNewBook = book;
+  _hthQueue   = shuffled;
+  _hthIdx     = 0;
+  _hthTotal   = shuffled.length;
+
+  // Give new book a starting score if it doesn't have one
+  if (!book.rankScore) book.rankScore = ELO_START;
+
+  openModal('hth-modal');
+  renderHthPair();
+}
+
+function renderHthPair() {
+  if (_hthIdx >= _hthQueue.length) { hthFinish(); return; }
+
+  const bookA = _hthNewBook;
+  const bookB = _hthQueue[_hthIdx];
+  if (!bookB.rankScore) bookB.rankScore = ELO_START;
+
+  const pct = Math.round((_hthIdx / _hthTotal) * 100);
+  document.getElementById('hth-progress-bar').style.width = pct + '%';
+  document.getElementById('hth-progress-label').textContent =
+    `Comparison ${_hthIdx + 1} of ${_hthTotal}`;
+
+  document.getElementById('hth-cards').innerHTML = `
+    <div class="hth-card" id="hth-a" onclick="hthChoose('a')">
+      <div class="hth-cover">${bookCoverImg(bookA)}</div>
+      <div class="hth-title">${escHtml(bookA.title)}</div>
+      <div class="hth-author">${escHtml(bookA.author || '')}</div>
+    </div>
+    <div class="hth-vs">VS</div>
+    <div class="hth-card" id="hth-b" onclick="hthChoose('b')">
+      <div class="hth-cover">${bookCoverImg(bookB)}</div>
+      <div class="hth-title">${escHtml(bookB.title)}</div>
+      <div class="hth-author">${escHtml(bookB.author || '')}</div>
+    </div>`;
+}
+
+async function hthChoose(winner) {
+  const bookA = _hthNewBook;
+  const bookB = _hthQueue[_hthIdx];
+
+  // Flash winner
+  document.getElementById('hth-' + winner)?.classList.add('winner');
+  await new Promise(r => setTimeout(r, 280));
+
+  // Update Elo scores
+  const scoreA = winner === 'a' ? 1 : 0;
+  bookA.rankScore = newElo(bookA.rankScore, bookB.rankScore, scoreA);
+  bookB.rankScore = newElo(bookB.rankScore, bookA.rankScore, 1 - scoreA);
+
+  // Save peer immediately
+  await saveBookToFirestore(bookB);
+
+  _hthIdx++;
+  renderHthPair();
+}
+
+function hthSkip() {
+  _hthIdx++;
+  renderHthPair();
+}
+
+async function hthFinish() {
+  document.getElementById('hth-progress-bar').style.width = '100%';
+  closeModal('hth-modal');
+  await saveBookToFirestore(_hthNewBook);
+  showToast('Rankings updated ✓', 'success');
+  if (document.getElementById('page-rankings')?.classList.contains('active')) {
+    renderRankings();
+  }
+  refreshDashboard();
+}
+
+function hthSkipAll() {
+  closeModal('hth-modal');
+  if (_hthNewBook && !_hthNewBook.rankScore) {
+    _hthNewBook.rankScore = ELO_START;
+    saveBookToFirestore(_hthNewBook);
+  }
+}
+
+// ── Trigger ranking after marking a book as read with a rating ──
+// Called from saveBook when status=read and rating set
+function maybeStartRanking(bookId) {
+  // Small delay so Firestore save completes first
+  setTimeout(() => startRankingSession(bookId), 400);
+}
+
+// ── Rankings page render ──
+function renderRankings() {
+  const container = document.getElementById('rankings-content');
+  if (!container) return;
+
+  const readBooks = books.filter(b => b.status === 'read' && b.rating > 0);
+  if (readBooks.length === 0) {
+    container.innerHTML = '<div class="rankings-empty">No read books with ratings yet.<br>Rate a book to start ranking!</div>';
+    return;
+  }
+
+  let html = '';
+  for (let tier = 5; tier >= 1; tier--) {
+    const tierBooks = readBooks.filter(b => b.rating === tier)
+      .sort((a, b) => (b.rankScore || ELO_START) - (a.rankScore || ELO_START));
+    if (tierBooks.length === 0) continue;
+
+    const stars = '★'.repeat(tier) + '☆'.repeat(5 - tier);
+    const ranked = tierBooks.filter(b => b.rankScore);
+    const unranked = tierBooks.filter(b => !b.rankScore);
+
+    html += `
+      <div class="rankings-tier">
+        <div class="rankings-tier-header">
+          <span class="rankings-tier-stars">${stars}</span>
+          <span class="rankings-tier-count">${tierBooks.length} book${tierBooks.length !== 1 ? 's' : ''}</span>
+        </div>`;
+
+    if (ranked.length > 0) {
+      html += ranked.map((book, i) => {
+        const posClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+        const posLabel = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+        const score = eloToDisplay(book.rankScore, tier);
+        return `
+          <div class="rankings-item" onclick="openBookDetail('${book.id}')">
+            <div class="rankings-pos ${posClass}">${posLabel}</div>
+            <div class="rankings-cover">${bookCoverImg(book)}</div>
+            <div class="rankings-info">
+              <div class="rankings-title">${escHtml(book.title)}</div>
+              <div class="rankings-author">${escHtml(book.author || '')}</div>
+            </div>
+            <div class="rankings-score">${score}</div>
+            <button onclick="event.stopPropagation();startRankingSession('${book.id}')"
+              style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);cursor:pointer;color:var(--text-muted);font-family:inherit;"
+              title="Re-rank this book">⇅</button>
+          </div>`;
+      }).join('');
+    }
+
+    if (unranked.length > 0) {
+      html += `<div class="rankings-unranked">${unranked.length} book${unranked.length !== 1 ? 's' : ''} not yet ranked — open the book and tap ⇅ to rank</div>`;
+    }
+
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function openRankingsHelp() {
+  showToast('Rate a book ★ stars, then compare it head-to-head against other books at the same rating. Your picks determine the score within each tier.', 'info', 5000);
+}
+
+// ════════════════════════════════════════════════════════════
+// OWNERSHIP ADMIN TOOL
+// ════════════════════════════════════════════════════════════
+function ownAdminInit() {
+  const unmarked = books.filter(b => !b.ownPhysical && !b.ownDigital && !b.ownBorrowed);
+  const el = document.getElementById('own-admin-count');
+  if (el) el.textContent = `${unmarked.length} book${unmarked.length !== 1 ? 's' : ''} with no ownership marked.`;
+}
+
+function ownAdminLoad() {
+  const unmarked = books.filter(b => !b.ownPhysical && !b.ownDigital && !b.ownBorrowed)
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  document.getElementById('own-admin-idle').style.display = 'none';
+  document.getElementById('own-admin-list').style.display = '';
+
+  const container = document.getElementById('own-admin-items');
+  if (unmarked.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">All books have ownership marked ✓</div>';
+    return;
+  }
+
+  container.innerHTML = unmarked.map(book => `
+    <div class="own-admin-row" id="oa-${book.id}">
+      <div class="own-admin-title" title="${escHtml(book.title)}">${escHtml(book.title)}</div>
+      <div class="own-admin-btns">
+        <button class="own-admin-btn" id="oa-p-${book.id}" onclick="ownAdminToggle('${book.id}','physical')">📖</button>
+        <button class="own-admin-btn" id="oa-d-${book.id}" onclick="ownAdminToggle('${book.id}','digital')">💻</button>
+        <button class="own-admin-btn" id="oa-n-${book.id}" onclick="ownAdminToggle('${book.id}','none')" style="font-size:10px;">N/A</button>
+      </div>
+    </div>`).join('');
+}
+
+async function ownAdminToggle(bookId, type) {
+  const book = books.find(b => b.id === bookId);
+  if (!book) return;
+
+  if (type === 'physical') {
+    book.ownPhysical = !book.ownPhysical;
+    document.getElementById('oa-p-' + bookId)?.classList.toggle('active', book.ownPhysical);
+  } else if (type === 'digital') {
+    book.ownDigital = !book.ownDigital;
+    document.getElementById('oa-d-' + bookId)?.classList.toggle('active', book.ownDigital);
+  } else {
+    // N/A — mark as reviewed so it disappears
+    book.ownReviewed = true;
+  }
+
+  await saveBookToFirestore(book);
+
+  // Remove row if now marked
+  if (book.ownPhysical || book.ownDigital || book.ownReviewed) {
+    const row = document.getElementById('oa-' + bookId);
+    if (row) row.style.opacity = '0.4';
+  }
+}
+
+function ownAdminClose() {
+  document.getElementById('own-admin-idle').style.display = '';
+  document.getElementById('own-admin-list').style.display = 'none';
+  ownAdminInit();
+}
+
 // ---- SETTINGS ----
 function showSettingsPanel(id, el) {
   // Settings is now a single scroll page - scroll to section
@@ -2555,14 +2839,14 @@ async function clearAllData() {
 }
 
 // ---- TOAST ----
-function showToast(message, type = 'info') {
+function showToast(message, type = 'info', duration = 3000) {
   const cont = document.getElementById('toast-container');
   const icons = { success: '✅', error: '❌', info: 'ℹ️' };
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${message}</span>`;
   cont.appendChild(toast);
-  setTimeout(() => { toast.classList.add('toast-fade-out'); setTimeout(() => toast.remove(), 300); }, 3500);
+  setTimeout(() => { toast.classList.add('toast-fade-out'); setTimeout(() => toast.remove(), 300); }, duration);
 }
 
 // ---- HELPERS ----
