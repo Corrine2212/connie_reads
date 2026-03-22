@@ -156,8 +156,8 @@
 
         <div class="dash-card">
           <div class="dash-card-head">
-            <div class="dash-card-title">Want to Read</div>
-            <span class="dash-muted" id="want-count">0 books</span>
+            <div class="dash-card-title">Want to Read <span class="dash-muted" id="want-count" style="font-size:13px;font-weight:400;"></span></div>
+            <button class="dash-link" onclick="showPage('library')">View all</button>
           </div>
           <div id="want-to-read-list"><div class="dash-empty">Your wish list is empty</div></div>
         </div>
@@ -318,7 +318,7 @@
           <div class="stats-card"><div class="stats-card-title">&#11088; Ratings</div><div class="bar-chart" id="rating-chart"></div></div>
           <div class="stats-card"><div class="stats-card-title">&#128218; Format</div><div class="bar-chart" id="format-chart"></div></div>
           <div class="stats-card"><div class="stats-card-title">&#128202; Summary</div><div class="reading-time-stats" id="reading-summary"></div></div>
-          <div class="stats-card"><div class="stats-card-title">&#127945; Best Rated</div><div id="best-rated-list"></div></div>
+          <div class="stats-card"><div class="stats-card-title" style="justify-content:space-between;">&#127945; Best Rated<button class="dash-link" onclick="showPage('rankings')" style="font-family:inherit;">View Rankings</button></div><div id="best-rated-list"></div></div>
           <div class="stats-card"><div class="stats-card-title">&#9997;&#65039; Most Read Authors</div><div id="most-read-authors-list"></div></div>
         </div>
       </div>
@@ -468,7 +468,6 @@
     <div class="mobile-nav-item" id="mob-search" onclick="showPage('search')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>Discover</div>
     <div class="mobile-nav-item" id="mob-library" onclick="showPage('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Library</div>
     <div class="mobile-nav-item" id="mob-stats" onclick="showPage('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Stats</div>
-    <div class="mobile-nav-item" id="mob-rankings" onclick="showPage('rankings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6l4-4 4 4"/><path d="M12 2v10"/><path d="M3 20h18"/><path d="M5 20v-6a2 2 0 0 1 2-2h2"/><path d="M19 20v-6a2 2 0 0 1-2-2h-2"/></svg>Ranks</div>
     <div class="mobile-nav-item" id="mob-settings" onclick="showPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
   </div>
 </nav>

@@ -2368,7 +2368,7 @@ input[type="date"].form-input {
   .search-hero-bar { height: 46px; }
   .genre-chips { gap: 5px; }
   .filter-chip { font-size: 12px; padding: 5px 10px; }
-  .search-results { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .search-results { grid-template-columns: repeat(2, 1fr); gap: 8px; }
 
   /* ── TOAST ── */
   .toast-container { bottom: 85px; right: 10px; left: 10px; }
