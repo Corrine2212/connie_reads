@@ -413,7 +413,8 @@ a { color: inherit; text-decoration: none; }
 #page-search,
 #page-stats,
 #page-settings,
-#page-collections {
+#page-collections,
+#page-rankings {
   padding: 28px 32px 40px;
 }
 
@@ -1968,6 +1969,24 @@ input[type="date"].form-input {
 .ge-status-pill.notfound { color: var(--accent); }
 
 
+
+.page-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 /* ========== RANKINGS PAGE ========== */
 .rankings-tier {
   margin-bottom: 24px;
@@ -2176,7 +2195,8 @@ input[type="date"].form-input {
   #page-search,
   #page-stats,
   #page-settings,
-  #page-collections {
+  #page-collections,
+  #page-rankings {
     padding: 14px 14px calc(76px + env(safe-area-inset-bottom));
   }
   #page-library {
@@ -2223,7 +2243,8 @@ input[type="date"].form-input {
   #page-search,
   #page-stats,
   #page-settings,
-  #page-collections {
+  #page-collections,
+  #page-rankings {
     padding: 10px 12px calc(80px + env(safe-area-inset-bottom));
   }
   #page-library {
