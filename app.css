@@ -1923,6 +1923,40 @@ input[type="date"].form-input {
 }
 
 
+
+/* ========== SUGGESTION DROPDOWNS ========== */
+.suggestion-dropdown {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  min-width: 200px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 2000;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+.suggestion-item {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.1s;
+  border-bottom: 1px solid var(--border);
+}
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover,
+.suggestion-item:active { background: var(--accent-soft); color: var(--accent); }
+
+/* Wrap must be relative so dropdown positions correctly */
+#genre-chips-wrap,
+#tag-input-wrap { position: relative; }
+
 /* ========== GENRE ENRICHMENT TOOL ========== */
 .ge-book-row {
   display: flex;
