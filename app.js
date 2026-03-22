@@ -513,6 +513,42 @@ function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 // ---- ADD/EDIT BOOK MODAL ----
+// ---- MODAL SUGGESTIONS (genres + tags from library) ----
+function populateBookModalSuggestions() {
+  // ── Genres: merge static list with genres actually used in library ──
+  const STATIC_GENRES = [
+    'Fiction','Literary Fiction','Historical Fiction','Science Fiction','Fantasy',
+    'Horror','Thriller','Mystery','Crime','Romance','Contemporary','Adventure',
+    'Dystopia','Magical Realism','Gothic','Humour','Satire','Non-Fiction',
+    'Biography','Autobiography','Memoir','History','True Crime','Self-Help',
+    'Psychology','Philosophy','Science','Nature','Politics','Essays',
+    'Travel','Young Adult','Children','Graphic Novel','Poetry','Short Stories','Classic'
+  ];
+  const usedGenres = new Set();
+  books.forEach(b => {
+    if (Array.isArray(b.genres)) b.genres.forEach(g => g && usedGenres.add(g));
+    else if (b.genre) b.genre.split(',').map(g => g.trim()).filter(Boolean).forEach(g => usedGenres.add(g));
+  });
+  // Used genres first (most relevant), then static fallbacks not already covered
+  const allGenres = [
+    ...[...usedGenres].sort(),
+    ...STATIC_GENRES.filter(g => !usedGenres.has(g))
+  ];
+  const genreDatalist = document.getElementById('genre-suggestions');
+  if (genreDatalist) {
+    genreDatalist.innerHTML = allGenres.map(g => `<option value="${escHtml(g)}">`).join('');
+  }
+
+  // ── Tags: all tags used across the library, sorted by frequency ──
+  const tagFreq = {};
+  books.forEach(b => (b.tags || []).forEach(t => { tagFreq[t] = (tagFreq[t] || 0) + 1; }));
+  const allTags = Object.entries(tagFreq).sort((a, b) => b[1] - a[1]).map(([t]) => t);
+  const tagDatalist = document.getElementById('tag-suggestions');
+  if (tagDatalist) {
+    tagDatalist.innerHTML = allTags.map(t => `<option value="${escHtml(t)}">`).join('');
+  }
+}
+
 function openAddModal(prefill = null) {
   editingBookId = null;
   currentRating = 0;
@@ -544,6 +580,7 @@ function openAddModal(prefill = null) {
     }
   }
   renderCollectionCheckboxes([]);
+  populateBookModalSuggestions();
   openModal('book-modal');
 }
 
@@ -591,6 +628,7 @@ function openEditModal(bookId) {
   }
 
   renderCollectionCheckboxes(book.collections || []);
+  populateBookModalSuggestions();
   openModal('book-modal');
 }
 
